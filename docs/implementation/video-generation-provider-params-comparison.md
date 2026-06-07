@@ -255,8 +255,7 @@ For all providers, prefer:
 Source files:
 
 - `apps/next-app/app/[lang]/(root)/video-generate/page.tsx`
-- `apps/nuxt-app/pages/video-generate.vue`
-- `apps/tanstack-app/src/routes/$lang/(root)/video-generate.tsx`
+- Next.js integration should use shared logic from `libs/ai`.
 - `libs/ai/video.ts`
 - `libs/ai/types.ts`
 

@@ -26,7 +26,7 @@ export function SharedAppProvider({
 
 /**
  * Access shared translation context from within libs/react-shared components.
- * Each app (Next.js, TanStack Start) wraps its root with SharedAppProvider,
+ * Each Next.js app wraps its root with SharedAppProvider,
  * injecting its own useTranslation() result.
  */
 export function useSharedApp() {

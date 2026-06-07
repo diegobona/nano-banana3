@@ -51,7 +51,7 @@ test.describe('Upload Page', () => {
     page: Page,
     payload: { name: string; mimeType: string; buffer: Buffer }
   ): Promise<void> {
-    // Nuxt hydration can finish slightly after first paint in dev mode.
+    // Hydration can finish slightly after first paint in dev mode.
     // If we attach files too early, the change handler may not be bound yet.
     await page.waitForTimeout(2500);
     const input = page.locator('input[type="file"]').first();

@@ -121,9 +121,7 @@ describe('Ownership Boundary — user-scoped APIs', () => {
       userB.cookies,
     );
 
-    // Next/TanStack should return 403 for ownership denial.
-    // Nuxt currently returns 400 for unsupported provider in this route.
-    // In all cases, cross-user access must never be successful.
+    // Cross-user access must never be successful.
     expect(response.status).not.toBe(200);
   });
 });

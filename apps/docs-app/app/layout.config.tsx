@@ -1,5 +1,4 @@
 import type { BaseLayoutProps } from 'fumadocs-ui/layouts/shared';
-import { i18n } from '@/lib/i18n';
 import { Logo } from '@/components/ui/logo';
 import { translations } from '@libs/i18n';
 
@@ -14,7 +13,6 @@ export function baseOptions(locale: string): BaseLayoutProps {
   const t = translations[locale as keyof typeof translations] || translations.en;
 
   return {
-    i18n,
     nav: {
       title: <Logo size="md" />,
     },

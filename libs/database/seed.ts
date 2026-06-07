@@ -138,7 +138,7 @@ async function seedDatabase() {
               id: crypto.randomUUID(),
               title: "Getting Started with TinyShip",
               slug: "getting-started-with-tinyship",
-              content: "# Getting Started\n\nWelcome to **TinyShip**! This is a modern SaaS starter kit.\n\n## Features\n\n- Next.js & Nuxt.js support\n- Authentication\n- Payment integration\n\n```javascript\nconsole.log(\"Hello TinyShip!\");\n```\n\nEnjoy building your SaaS!",
+              content: "# Getting Started\n\nWelcome to **Pixal3D**! This is a modern Next.js SaaS application.\n\n## Features\n\n- Next.js app\n- Authentication\n- Payment integration\n- AI 3D generation\n\n```javascript\nconsole.log(\"Hello Pixal3D!\");\n```\n\nEnjoy building your SaaS!",
               coverImage: "https://static.vikingz.me/uploads/m7i5mVxdOw0oP8Y6iIPfpGgHJK5i1VVd/1773209769094-z7o70l.png",
               excerpt: "Learn how to get started with TinyShip, the modern SaaS development platform.",
               authorId: adminId,

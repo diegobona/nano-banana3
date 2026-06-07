@@ -1,5 +1,5 @@
 /**
- * Shared React component library for Next.js and TanStack Start apps.
+ * Shared React component library for the Next.js apps.
  *
  * This is NOT a workspace package -- it's plain source code referenced via
  * the @libs/react-shared path alias, compiled by each consuming app's bundler.

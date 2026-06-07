@@ -158,7 +158,7 @@ test.describe('Admin Sub-page Filters', () => {
       await goToPage(PAGES.adminSubscriptions);
 
       // Next.js has a "Payment Type" filter (trigger text: "All Types"),
-      // Nuxt has a "Provider" filter (trigger text: "All Providers").
+      // Keep this selector flexible for filter trigger text changes.
       const allTriggers = page.getByRole('combobox');
       const count = await allTriggers.count();
 

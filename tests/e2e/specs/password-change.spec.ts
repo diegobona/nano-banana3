@@ -94,7 +94,7 @@ test.describe('Password Change', () => {
     const dialog = page.locator('[role="dialog"]');
     await expect(dialog).toBeVisible({ timeout: TIMEOUTS.navigation });
 
-    // Fill the form – IDs differ between Next.js (camelCase) and Nuxt (kebab-case)
+    // Fill the form using the stable Next.js IDs.
     const currentPwInput = page.locator('#currentPassword, #current-password');
     const newPwInput = page.locator('#newPassword, #new-password');
     const confirmPwInput = page.locator('#confirmPassword, #confirm-password');

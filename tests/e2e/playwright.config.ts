@@ -3,11 +3,8 @@ import { defineConfig, devices } from '@playwright/test';
 /**
  * Playwright E2E Test Configuration
  *
- * All three apps (Next.js, Nuxt.js, TanStack Start) share port 7001.
  * Start the dev server manually before running tests:
- *   - Next:     pnpm dev:next
- *   - Nuxt:     pnpm dev:nuxt
- *   - TanStack: pnpm dev:tanstack
+ *   pnpm dev:next
  *
  * Then run: pnpm test:e2e
  */

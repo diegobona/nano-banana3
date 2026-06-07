@@ -86,7 +86,7 @@ export async function ensureServerRunning(): Promise<void> {
   } catch {
     throw new Error(
       `Server not reachable at ${BASE_URL}. ` +
-        'Start it first: pnpm dev:next | dev:nuxt | dev:tanstack',
+        'Start it first: pnpm dev:next',
     );
   }
 }

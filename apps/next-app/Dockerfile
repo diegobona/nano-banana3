@@ -18,9 +18,6 @@ COPY config ./config
 COPY apps/next-app ./apps/next-app
 COPY libs ./libs
 COPY scripts ./scripts
-# Copy sibling app package.json files for pnpm workspace resolution
-COPY apps/nuxt-app/package.json ./apps/nuxt-app/package.json
-COPY apps/tanstack-app/package.json ./apps/tanstack-app/package.json
 
 # Accept build arguments for CI/CD environments
 ARG NEXT_PUBLIC_TURNSTILE_SITE_KEY

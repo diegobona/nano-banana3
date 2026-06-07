@@ -12,7 +12,7 @@ import { signUpViaAPI } from '../helpers/auth';
  *      balance is updated.
  *
  * Prerequisites:
- * 1. Dev server running on port 7001 (`pnpm dev:next` or `pnpm dev:nuxt`)
+ * 1. Dev server running on port 7001 (`pnpm dev:next`)
  * 2. Stripe CLI forwarding webhooks:
  *    `stripe listen --forward-to localhost:7001/api/payment/webhook/stripe`
  * 3. Stripe test mode enabled (using test API keys in .env)

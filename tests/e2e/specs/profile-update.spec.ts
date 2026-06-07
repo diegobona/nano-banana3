@@ -52,7 +52,7 @@ test.describe('Profile Update', () => {
     });
 
     // Verify the "Edit" button exists (scoped to main content area)
-    // Use substring match — Vue/Nuxt SSR may add whitespace around text content
+    // Use substring match to tolerate harmless whitespace around text content.
     const editButton = page.locator('main button').filter({ hasText: /Edit/ });
     await expect(editButton.first()).toBeVisible({ timeout: TIMEOUTS.navigation });
 

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack --port 7001",
+    "dev": "next dev --webpack --port 7001",
     "build": "next build",
     "build:cf": "node ../../scripts/opennext-cloudflare.mjs build",
     "preview:cf": "node ../../scripts/opennext-cloudflare.mjs build && node ../../scripts/opennext-cloudflare.mjs preview --port 7001",

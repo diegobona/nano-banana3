@@ -23,8 +23,6 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          # Use Node.js 22.20+ LTS for Nuxt 4 oxc-parser compatibility
-          # See: https://github.com/nuxt/nuxt/issues/33480
           node-version: '22.x'
           cache: 'pnpm'
 
@@ -46,18 +44,6 @@ jobs:
         env:
           # Add any required environment variables here
           # These are typically set in GitHub Secrets for production
-          NODE_ENV: production
-          BUILD_TIME: true
-
-      - name: Build Nuxt.js app
-        run: NODE_OPTIONS="--max-old-space-size=4096" pnpm build:nuxt
-        env:
-          NODE_ENV: production
-          BUILD_TIME: true
-
-      - name: Build TanStack Start app
-        run: NODE_OPTIONS="--max-old-space-size=4096" pnpm build:tanstack
-        env:
           NODE_ENV: production
           BUILD_TIME: true
 
@@ -85,22 +71,6 @@ jobs:
             cp env.example .env 2>/dev/null || echo "BUILD_TIME=true" > .env
           fi
 
-      - name: Build Nuxt.js Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./apps/nuxt-app/Dockerfile
-          # Specify target platform (linux/amd64 for CI compatibility)
-          platforms: linux/amd64
-          push: false
-          tags: tinyship-nuxt:test
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          build-args: |
-            BUILD_TIME=true
-          # Increase shared memory size for large builds (Nuxt/Vite can be memory-intensive)
-          shm-size: 2g
-          
       - name: Build Next.js Docker image
         uses: docker/build-push-action@v5
         with:
@@ -109,20 +79,6 @@ jobs:
           platforms: linux/amd64
           push: false
           tags: tinyship-next:test
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          build-args: |
-            BUILD_TIME=true
-          shm-size: 2g
-
-      - name: Build TanStack Start Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./apps/tanstack-app/Dockerfile
-          platforms: linux/amd64
-          push: false
-          tags: tinyship-tanstack:test
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |

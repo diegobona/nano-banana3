@@ -276,13 +276,13 @@ test.describe('Blog', () => {
 
       const row = page.locator('tr, [role="row"]').filter({ hasText: `${testPostTitle} Updated` });
 
-      // Next.js has a direct destructive delete button; Nuxt.js uses a dropdown menu
+      // Prefer the direct destructive delete button when present.
       const directDeleteBtn = row.locator('button.text-destructive, button:has(.text-destructive)').first();
 
       if (await directDeleteBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
         await directDeleteBtn.click();
       } else {
-        // Nuxt.js path: open dropdown menu → click Delete → confirm in AlertDialog
+        // Dropdown path: open menu, click Delete, confirm in AlertDialog.
         const menuTrigger = row.locator('button:has(.lucide-more-horizontal), button:has(.lucide-ellipsis)').first();
         if (await menuTrigger.isVisible({ timeout: 2000 }).catch(() => false)) {
           await menuTrigger.click();

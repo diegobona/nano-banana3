@@ -2,13 +2,10 @@
  * Auth Protection Tests
  *
  * Every protected API endpoint MUST return 401 when called without
- * a session cookie. This catches missing auth guards — especially in
- * TanStack Start where there is no global API middleware.
+ * a session cookie. This catches missing auth guards.
  *
- * Run against whichever app is on port 7001:
+ * Run against the Next app on port 7001:
  *   pnpm dev:next   && pnpm test:api
- *   pnpm dev:nuxt   && pnpm test:api
- *   pnpm dev:tanstack && pnpm test:api
  */
 
 import { describe, test, expect, beforeAll } from 'vitest';

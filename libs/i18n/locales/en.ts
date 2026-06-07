@@ -418,5 +418,28 @@ export const en: Locale = {
         failed: "Failed"
       }
     }
+  },
+  docs: {
+    nav: {
+      docs: "Docs",
+      blog: "Blog"
+    },
+    home: {
+      title: "Pixal3D Docs",
+      description: "Guides and references for running the Pixal3D Next.js app.",
+      cta: {
+        docs: "Read Docs",
+        blog: "Read Blog"
+      }
+    },
+    blog: {
+      title: "Blog",
+      description: "Pixal3D updates and implementation notes.",
+      allPosts: "All Posts",
+      previousPage: "Previous",
+      nextPage: "Next",
+      noPosts: "No posts yet.",
+      back: "Back to Blog"
+    }
   }
 } as const;

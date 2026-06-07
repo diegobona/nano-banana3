@@ -27,7 +27,7 @@ test.describe('Authentication Flow', () => {
       await page.goto(PAGES.signup, { timeout: TIMEOUTS.navigation });
 
       // Wait for client-side hydration so Vue/React event handlers are attached.
-      // Without this, form may submit as raw HTML (no JS) on Nuxt.
+      // Wait for client-side handlers before submitting the form.
       await page.waitForTimeout(2000);
 
       // Fill in the registration form

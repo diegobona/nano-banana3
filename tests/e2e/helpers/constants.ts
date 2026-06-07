@@ -74,7 +74,7 @@ export const API = {
 
 /** Timeouts for various operations */
 export const TIMEOUTS = {
-  /** Page navigation + hydration (Nuxt first-load compile may be slower) */
+  /** Page navigation + hydration */
   navigation: 30_000,
   /** Auth API calls (cold boot compilation can be slow in dev mode) */
   auth: 30_000,

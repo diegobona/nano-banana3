@@ -66,14 +66,12 @@ This catches IDOR-style regressions where an endpoint accidentally leaks another
 
 ## How to run
 
-1. Start one app on port `7001`:
+1. Start the Next.js app on port `7001`:
    - `pnpm dev:next`
-   - `pnpm dev:nuxt`
-   - `pnpm dev:tanstack`
 2. Run API tests:
    - `pnpm test:api`
 
-The same suite is designed to run against all three apps (one app at a time on port `7001`).
+The suite is designed to run against `apps/next-app`.
 
 ## Scope and non-goals
 

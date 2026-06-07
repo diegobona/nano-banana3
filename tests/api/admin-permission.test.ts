@@ -3,7 +3,7 @@
  *
  * Admin-only API endpoints MUST return 403 when called by an
  * authenticated normal (non-admin) user. This verifies the
- * RBAC layer works across all three apps.
+ * RBAC layer works for the Next app.
  *
  * A fresh normal user is created in beforeAll via Better Auth sign-up.
  */

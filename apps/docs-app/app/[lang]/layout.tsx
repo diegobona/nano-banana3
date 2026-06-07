@@ -4,40 +4,28 @@ import type { ReactNode } from 'react';
 import { Suspense } from 'react';
 import type { Metadata, Viewport } from 'next';
 import { ThemeScript } from '@/components/theme-script';
-import { defineI18nUI } from 'fumadocs-ui/i18n';
-import { i18n } from '@/lib/i18n';
 import { config } from '@config';
 import { translations } from '@libs/i18n';
 import { DocsRootProvider } from '@/components/docs-root-provider';
-
-// Define i18n UI with translations for language switcher
-const { provider } = defineI18nUI(i18n, {
-  translations: {
-    en: {
-      displayName: 'English',
-    },
-    'zh-CN': {
-      displayName: '中文',
-      search: '搜索文档',
-    },
-  },
-});
-
 
 const inter = Inter({
   subsets: ['latin'],
 });
 
-export async function generateViewport({ params }: { params: Promise<{ lang: string }> }): Promise<Viewport> {
+export async function generateViewport(): Promise<Viewport> {
   return {
     themeColor: '#3b82f6',
   };
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ lang: string }>;
+}): Promise<Metadata> {
   const { lang } = await params;
-  const t = translations[lang as keyof typeof translations];
-  
+  const t = translations[lang as keyof typeof translations] || translations.en;
+
   return {
     metadataBase: new URL(process.env.APP_BASE_URL || 'http://localhost:3001'),
     title: t.home.metadata.title,
@@ -99,15 +87,15 @@ export async function generateStaticParams() {
   }));
 }
 
-export default async function Layout({ 
+export default async function Layout({
   params,
   children,
- }: {
+}: {
   params: Promise<{ lang: string }>;
   children: ReactNode;
- }) {
+}) {
   const lang = (await params).lang;
-  
+
   return (
     <html lang={lang} className={inter.className} suppressHydrationWarning>
       <head>
@@ -115,9 +103,7 @@ export default async function Layout({
       </head>
       <body className="flex flex-col min-h-screen">
         <Suspense fallback={null}>
-          <DocsRootProvider i18n={provider(lang)}>
-            {children}
-          </DocsRootProvider>
+          <DocsRootProvider lang={lang}>{children}</DocsRootProvider>
         </Suspense>
       </body>
     </html>

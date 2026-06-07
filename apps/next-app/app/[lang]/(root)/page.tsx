@@ -24,7 +24,8 @@ import {
 type TaskStatus = "idle" | "upload-ready" | "processing" | "checking" | "succeeded" | "failed";
 type ResolutionOption = 1024 | 1536;
 type ApiTextureSizeOption = 1024 | 2048 | 4096;
-type ImageAspectRatioOption = "1:1" | "4:3" | "3:4" | "16:9" | "9:16";
+type ImageAspectRatioOption = "auto" | "1:1" | "1:4" | "1:8" | "2:3" | "3:2" | "3:4" | "4:1" | "4:3" | "4:5" | "5:4" | "8:1" | "9:16" | "16:9" | "21:9";
+type ImageModelOption = "Nano Banana 2";
 type ImageResolutionOption = "1K" | "2K" | "4K";
 type OutputCountOption = 1 | 2 | 4;
 type PageNoticeType = "error" | "info" | "success";
@@ -40,6 +41,7 @@ interface PageNotice {
 }
 
 interface Pixal3DSettings {
+  model: ImageModelOption;
   aspectRatio: ImageAspectRatioOption;
   imageResolution: ImageResolutionOption;
   outputCount: OutputCountOption;
@@ -65,6 +67,12 @@ interface SampleImage {
   name: string;
   src: string;
   transparentSrc?: string;
+}
+
+interface ReferenceImage {
+  id: string;
+  name: string;
+  src: string;
 }
 
 interface GenerateResponse {
@@ -136,7 +144,26 @@ const POLL_INTERVAL_MS = 3000;
 const POLL_TIMEOUT_MS = 10 * 60 * 1000;
 const FREE_TRIAL_DURATION_SECONDS = 15 * 60;
 const SHOW_LEGACY_HF_TRIAL = false;
-const ASPECT_RATIO_OPTIONS: ImageAspectRatioOption[] = ["1:1", "4:3", "3:4", "16:9", "9:16"];
+const MAX_PROMPT_LENGTH = 20000;
+const MAX_REFERENCE_IMAGES = 14;
+const MODEL_OPTIONS: ImageModelOption[] = ["Nano Banana 2"];
+const ASPECT_RATIO_OPTIONS: ImageAspectRatioOption[] = [
+  "auto",
+  "1:1",
+  "1:4",
+  "1:8",
+  "2:3",
+  "3:2",
+  "3:4",
+  "4:1",
+  "4:3",
+  "4:5",
+  "5:4",
+  "8:1",
+  "9:16",
+  "16:9",
+  "21:9",
+];
 const IMAGE_RESOLUTION_OPTIONS: ImageResolutionOption[] = ["1K", "2K", "4K"];
 const OUTPUT_COUNT_OPTIONS: OutputCountOption[] = [1, 2, 4];
 const IMAGE_RESOLUTION_TO_API_RESOLUTION: Record<ImageResolutionOption, ResolutionOption> = {
@@ -155,8 +182,9 @@ const IMAGE_RESOLUTION_CREDIT_COST: Record<ImageResolutionOption, number> = {
   "4K": 1500,
 };
 const DEFAULT_PIXAL3D_SETTINGS: Pixal3DSettings = {
+  model: "Nano Banana 2",
   aspectRatio: "1:1",
-  imageResolution: "1K",
+  imageResolution: "2K",
   outputCount: 1,
   decimationTarget: 200000,
   maxNumTokens: 49152,
@@ -274,14 +302,15 @@ const FAQ_KEYS = ["generator", "oneImage", "bestImages", "formats"] as const;
 export default function Home() {
   const { t, locale, localizedPath } = useTranslation();
   const { data: session, isPending: isSessionPending } = authClientReact.useSession();
+  const [prompt, setPrompt] = useState("");
+  const [referenceImages, setReferenceImages] = useState<ReferenceImage[]>([]);
   const [imageDataUrl, setImageDataUrl] = useState("");
-  const [imageName, setImageName] = useState("");
   const [generatedImageUrl, setGeneratedImageUrl] = useState("");
   const [progressPlan, setProgressPlan] = useState<Pixal3DProgressPlanStep[]>(() => createPixal3DProgressPlan());
   const [progressStartedAt, setProgressStartedAt] = useState<number | null>(null);
   const [progressSnapshot, setProgressSnapshot] = useState<Pixal3DProgressSnapshot | null>(null);
   const [settings, setSettings] = useState<Pixal3DSettings>(DEFAULT_PIXAL3D_SETTINGS);
-  const [openSettingsMenu, setOpenSettingsMenu] = useState<"aspectRatio" | "imageResolution" | "outputCount" | null>(null);
+  const [openSettingsMenu, setOpenSettingsMenu] = useState<"model" | "aspectRatio" | "imageResolution" | "outputCount" | null>(null);
   const [taskStatus, setTaskStatus] = useState<TaskStatus>("idle");
   const [taskMessage, setTaskMessage] = useState(t.pixal3d.generator.status.idle);
   const [isReadingFile, setIsReadingFile] = useState(false);
@@ -304,21 +333,22 @@ export default function Home() {
   const isAuthenticated = Boolean(session?.user);
   const hasEnoughCredits = creditBalance >= requiredCredits;
   const hasPaidSubscription = Boolean(subscriptionPlanId);
+  const hasPrompt = Boolean(prompt.trim());
   const canEditGenerationSettings = taskStatus !== "processing";
   const canGenerate = useMemo(() => {
     return Boolean(
-      imageDataUrl
+      prompt.trim()
       && isAuthenticated
       && hasEnoughCredits
       && taskStatus !== "processing"
       && !isReadingFile
       && !isSessionPending
     );
-  }, [hasEnoughCredits, imageDataUrl, isAuthenticated, isReadingFile, isSessionPending, taskStatus]);
+  }, [hasEnoughCredits, isAuthenticated, isReadingFile, isSessionPending, prompt, taskStatus]);
   const generateDisabledReason = getPixal3DGenerateDisabledReason({
     isSessionPending,
     isAuthenticated,
-    hasImage: Boolean(imageDataUrl),
+    hasImage: hasPrompt,
     creditBalance,
     requiredCredits,
     isReadingFile,
@@ -355,7 +385,7 @@ export default function Home() {
     taskStatus === "processing"
     || isReadingFile
     || isSessionPending
-    || (!imageDataUrl && !canUseGenerateButtonAsPricingShortcut)
+    || (!hasPrompt && !canUseGenerateButtonAsPricingShortcut)
     || (!isAuthenticated && !canUseGenerateButtonAsPricingShortcut)
   );
   const generateButtonLabel = taskStatus === "processing"
@@ -569,8 +599,17 @@ export default function Home() {
         reader.onerror = () => reject(new Error("file_read_failed"));
         reader.readAsDataURL(file);
       });
-      setImageDataUrl(dataUrl);
-      setImageName(file.name);
+      const nextReferenceImage: ReferenceImage = {
+        id: `${file.name}-${file.size}-${Date.now()}`,
+        name: file.name,
+        src: dataUrl,
+      };
+      setReferenceImages((current) => {
+        const nextImages = [...current, nextReferenceImage].slice(0, MAX_REFERENCE_IMAGES);
+        const firstImage = nextImages[0];
+        setImageDataUrl(firstImage?.src || "");
+        return nextImages;
+      });
       setGeneratedImageUrl("");
       setProgressSnapshot(null);
       setProgressStartedAt(null);
@@ -584,8 +623,11 @@ export default function Home() {
   };
 
   const handleFiles = (files: FileList | File[]) => {
-    const file = files[0];
-    if (file) void readFileAsDataUrl(file);
+    const availableSlots = MAX_REFERENCE_IMAGES - referenceImages.length;
+    if (availableSlots <= 0) return;
+    Array.from(files).slice(0, availableSlots).forEach((file) => {
+      void readFileAsDataUrl(file);
+    });
   };
 
   const useSampleImage = (sample: Pick<SampleImage, "name" | "src">) => {
@@ -593,13 +635,36 @@ export default function Home() {
       ? sample.src
       : `${window.location.origin}${sample.src}`;
     clearPageNotice();
-    setImageDataUrl(resolvedImageSrc);
-    setImageName(sample.name);
+    const nextReferenceImage: ReferenceImage = {
+      id: `${sample.name}-${Date.now()}`,
+      name: sample.name,
+      src: resolvedImageSrc,
+    };
+    setReferenceImages((current) => {
+      const nextImages = [...current, nextReferenceImage].slice(0, MAX_REFERENCE_IMAGES);
+      const firstImage = nextImages[0];
+      setImageDataUrl(firstImage?.src || "");
+      return nextImages;
+    });
     setGeneratedImageUrl("");
     setProgressSnapshot(null);
     setProgressStartedAt(null);
     setTaskStatus("upload-ready");
     setTaskMessage(t.pixal3d.generator.status.ready);
+  };
+
+  const removeReferenceImage = (id: string) => {
+    setReferenceImages((current) => {
+      const nextImages = current.filter((image) => image.id !== id);
+      const firstImage = nextImages[0];
+      setImageDataUrl(firstImage?.src || "");
+      if (!firstImage) {
+        setTaskStatus("idle");
+        setTaskMessage(t.pixal3d.generator.status.idle);
+      }
+      return nextImages;
+    });
+    setGeneratedImageUrl("");
   };
 
   const updateSetting = <K extends keyof Pixal3DSettings>(key: K, value: Pixal3DSettings[K]) => {
@@ -678,8 +743,9 @@ export default function Home() {
       return;
     }
 
-    if (!imageDataUrl) {
-      showPageNotice("error", t.pixal3d.generator.errors.imageRequired);
+    const trimmedPrompt = prompt.trim();
+    if (!trimmedPrompt) {
+      showPageNotice("error", t.pixal3d.generator.errors.promptRequired);
       return;
     }
 
@@ -700,8 +766,10 @@ export default function Home() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          imageUrl: imageDataUrl,
-          prompt: t.pixal3d.generator.defaultPrompt,
+          imageUrl: imageDataUrl || undefined,
+          referenceImages: referenceImages.map((image) => image.src),
+          prompt: prompt.trim(),
+          model: settings.model,
           quality: "standard",
           aspectRatio: settings.aspectRatio,
           imageResolution: settings.imageResolution,
@@ -935,108 +1003,120 @@ export default function Home() {
 
           <div data-testid="pixal3d-generator-card" className="mt-4 w-full max-w-[1420px] rounded-2xl border border-white/10 bg-[linear-gradient(180deg,rgba(11,20,43,0.76),rgba(7,13,32,0.9))] p-4 shadow-[0_22px_82px_rgba(0,0,0,0.18)] backdrop-blur sm:p-5">
             <div className="grid gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(440px,0.65fr)]">
-            <div
-              className={`relative flex min-h-[320px] cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed px-4 py-8 transition-colors lg:min-h-[248px] lg:px-6 lg:py-6 ${
-                isDragging ? "border-[#48bdff]/80 bg-[#10224d]/88" : "border-white/10 bg-[#09142d]/58 hover:border-[#48bdff]/45 hover:bg-[#0b1733]/76"
-              }`}
-              onClick={() => document.getElementById("pixal3d-image")?.click()}
-              onDragOver={(event) => {
-                event.preventDefault();
-                setIsDragging(true);
-              }}
-              onDragLeave={() => setIsDragging(false)}
-              onDrop={(event) => {
-                event.preventDefault();
-                setIsDragging(false);
-                handleFiles(event.dataTransfer.files);
-              }}
-              onPaste={(event) => {
-                const files = Array.from(event.clipboardData.files);
-                if (files.length) handleFiles(files);
-              }}
-              tabIndex={0}
-            >
-              <Input
-                id="pixal3d-image"
-                data-testid="pixal3d-image-input"
-                type="file"
-                accept=".jpg,.jpeg,.png,.webp,.bmp"
-                className="hidden"
-                onChange={(event) => {
-                  const file = event.target.files?.[0];
-                  if (file) void readFileAsDataUrl(file);
-                  event.currentTarget.value = "";
+            <div className="flex min-h-[320px] flex-col gap-4 rounded-xl border border-white/10 bg-[#09142d]/58 p-4 lg:min-h-[248px] lg:p-5">
+              <label className="flex min-w-0 flex-1 flex-col gap-2">
+                <span className="text-sm font-extrabold text-[#eef4ff]">{t.pixal3d.generator.promptLabel}</span>
+                <span className="text-sm font-medium text-[#8e99b3]">{t.pixal3d.generator.promptDescription}</span>
+                <textarea
+                  data-testid="pixal3d-prompt-input"
+                  value={prompt}
+                  maxLength={MAX_PROMPT_LENGTH}
+                  placeholder={t.pixal3d.generator.promptPlaceholder}
+                  disabled={!canEditGenerationSettings}
+                  className="min-h-[156px] flex-1 resize-none rounded-xl border border-white/10 bg-[#050a16]/82 px-4 py-4 text-base font-medium leading-7 text-[#eef4ff] outline-none transition placeholder:text-[#7f889e] hover:border-[#48bdff]/35 focus:border-[#48bdff]/75 disabled:opacity-60"
+                  onChange={(event) => setPrompt(event.target.value.slice(0, MAX_PROMPT_LENGTH))}
+                />
+                <span className="self-end text-sm font-semibold text-[#8e99b3]">
+                  {prompt.length}/{MAX_PROMPT_LENGTH}
+                </span>
+              </label>
+
+              <div
+                data-testid="pixal3d-reference-upload"
+                className={`rounded-xl border px-4 py-4 transition-colors ${
+                  isDragging ? "border-[#48bdff]/80 bg-[#10224d]/88" : "border-white/10 bg-white/[0.025]"
+                }`}
+                onDragOver={(event) => {
+                  event.preventDefault();
+                  setIsDragging(true);
                 }}
-              />
-              {imageDataUrl ? (
-                <div className="flex flex-col items-center gap-4 text-center">
-                  <div className="relative">
-                    <img
-                      src={imageDataUrl}
-                      alt={t.pixal3d.generator.imagePreviewAlt}
-                      className="h-36 w-36 rounded-lg border border-[#3b4668] object-cover shadow-2xl"
-                    />
-                    <button
-                      type="button"
-                      className="absolute -right-3 -top-3 inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#17223d] text-white shadow-lg transition-colors hover:bg-[#25314f]"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        setImageDataUrl("");
-                        setImageName("");
-                        setGeneratedImageUrl("");
-                        setTaskStatus("idle");
-                        setTaskMessage(t.pixal3d.generator.status.idle);
-                      }}
-                      aria-label={t.pixal3d.generator.removeImage}
-                    >
-                      <span aria-hidden="true">x</span>
-                    </button>
-                  </div>
-                  <div>
-                    <p className="max-w-[520px] truncate text-2xl font-bold text-[#d9dfef]">{imageName}</p>
-                    <p className="mt-2 text-base text-[#8f9ab4]">{t.pixal3d.generator.imageHint}</p>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <p className="text-[28px] font-extrabold text-[#d4dbec]">{t.pixal3d.generator.uploadButton}</p>
-                  <p className="mt-2 text-base font-medium text-[#8e99b3]">{t.pixal3d.generator.dragDropPaste}</p>
-                  <div className="mt-6 flex w-full max-w-[360px] items-center gap-4">
-                    <span className="h-px flex-1 bg-white/10" />
-                    <p className="text-sm font-semibold uppercase tracking-[0.28em] text-[#7f889e]">
-                      {t.pixal3d.generator.orLabel}
-                    </p>
-                    <span className="h-px flex-1 bg-white/10" />
+                onDragLeave={() => setIsDragging(false)}
+                onDrop={(event) => {
+                  event.preventDefault();
+                  setIsDragging(false);
+                  handleFiles(event.dataTransfer.files);
+                }}
+                onPaste={(event) => {
+                  const files = Array.from(event.clipboardData.files);
+                  if (files.length) handleFiles(files);
+                }}
+              >
+                <Input
+                  id="pixal3d-image"
+                  data-testid="pixal3d-image-input"
+                  type="file"
+                  accept=".jpg,.jpeg,.png,.webp,.bmp"
+                  multiple
+                  className="hidden"
+                  onChange={(event) => {
+                    if (event.target.files?.length) handleFiles(event.target.files);
+                    event.currentTarget.value = "";
+                  }}
+                />
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-3">
+                      <p className="text-sm font-extrabold text-[#eef4ff]">{t.pixal3d.generator.referenceImagesLabel}</p>
+                      <span data-testid="pixal3d-reference-count" className="text-sm font-bold text-[#8e99b3]">
+                        {referenceImages.length}/{MAX_REFERENCE_IMAGES}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-sm font-medium text-[#8e99b3]">{t.pixal3d.generator.referenceImagesHint}</p>
                   </div>
                   <Button
                     type="button"
-                    className="mt-6 h-14 w-full max-w-[360px] rounded-full border border-[#48bdff]/35 bg-[#101b36] text-xl font-bold text-[#e8f1ff] shadow-[0_14px_38px_rgba(72,189,255,0.08)] transition hover:border-[#48bdff]/70 hover:bg-[#152342] hover:shadow-[0_18px_48px_rgba(72,189,255,0.14)]"
-                    disabled={isReadingFile}
+                    className="h-10 rounded-full border border-[#48bdff]/35 bg-[#101b36] px-5 text-sm font-bold text-[#e8f1ff] transition hover:border-[#48bdff]/70 hover:bg-[#152342]"
+                    disabled={isReadingFile || referenceImages.length >= MAX_REFERENCE_IMAGES}
+                    onClick={() => document.getElementById("pixal3d-image")?.click()}
                   >
-                    {isReadingFile ? <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" /> : null}
-                    {t.pixal3d.generator.selectFileButton}
+                    {isReadingFile ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" /> : <span aria-hidden="true">+</span>}
+                    {t.pixal3d.generator.uploadButton}
                   </Button>
-                  <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row">
-                    <p className="text-lg font-semibold text-[#7f889e]">{t.pixal3d.generator.samplePrompt}</p>
-                    <div className="flex flex-wrap justify-center gap-3">
-                      {SAMPLE_IMAGES.map((sample) => (
-                        <button
-                          key={sample.src}
-                          type="button"
-                          className="h-16 w-16 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.035] p-1 transition hover:border-[#48bdff]/70 hover:bg-[#172341]"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            useSampleImage(sample);
-                          }}
-                          aria-label={`${t.pixal3d.generator.useSample} ${sample.name}`}
-                        >
-                          <img src={sample.src} alt="" className="h-full w-full rounded-xl object-cover" />
-                        </button>
-                      ))}
+                </div>
+
+                <div className="mt-4 flex flex-wrap gap-3">
+                  {referenceImages.map((image) => (
+                    <div key={image.id} className="group relative h-16 w-16 overflow-hidden rounded-xl border border-white/10 bg-[#101b36] p-1">
+                      <img src={image.src} alt={t.pixal3d.generator.imagePreviewAlt} className="h-full w-full rounded-lg object-cover" />
+                      <button
+                        type="button"
+                        className="absolute right-1 top-1 hidden h-6 w-6 items-center justify-center rounded-full bg-[#050a16]/88 text-sm font-extrabold text-white shadow-lg group-hover:inline-flex"
+                        onClick={() => removeReferenceImage(image.id)}
+                        aria-label={t.pixal3d.generator.removeImage}
+                      >
+                        x
+                      </button>
                     </div>
+                  ))}
+                  {referenceImages.length < MAX_REFERENCE_IMAGES ? (
+                    <button
+                      type="button"
+                      className="flex h-16 w-16 items-center justify-center rounded-xl border border-dashed border-white/18 bg-[#050a16]/56 text-2xl font-light text-[#8e99b3] transition hover:border-[#48bdff]/65 hover:text-[#dff7ff]"
+                      onClick={() => document.getElementById("pixal3d-image")?.click()}
+                      aria-label={t.pixal3d.generator.selectFileButton}
+                    >
+                      +
+                    </button>
+                  ) : null}
+                </div>
+
+                <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <p className="text-sm font-semibold text-[#7f889e]">{t.pixal3d.generator.samplePrompt}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {SAMPLE_IMAGES.map((sample) => (
+                      <button
+                        key={sample.src}
+                        type="button"
+                        className="h-11 w-11 overflow-hidden rounded-xl border border-white/10 bg-white/[0.035] p-1 transition hover:border-[#48bdff]/70 hover:bg-[#172341]"
+                        onClick={() => useSampleImage(sample)}
+                        aria-label={`${t.pixal3d.generator.useSample} ${sample.name}`}
+                      >
+                        <img src={sample.src} alt="" className="h-full w-full rounded-lg object-cover" />
+                      </button>
+                    ))}
                   </div>
-                </>
-              )}
+                </div>
+              </div>
             </div>
 
             <aside
@@ -1084,9 +1164,63 @@ export default function Home() {
 
             <div className="mt-4 rounded-xl bg-white/[0.025] px-3 py-3">
               <div className="grid gap-4 xl:grid-cols-[minmax(720px,1fr)_minmax(320px,440px)] xl:items-start">
-                <div className={`grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 ${
+                <div className={`grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-4 ${
                   canEditGenerationSettings ? "" : "opacity-55"
                 }`}>
+                  <label className="flex min-w-0 flex-col gap-2">
+                    <span className="text-xs font-bold uppercase tracking-normal text-[#8996b2]">{t.pixal3d.generator.settings.model}</span>
+                    <div
+                      className="relative"
+                      onBlur={(event) => {
+                        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+                          setOpenSettingsMenu(null);
+                        }
+                      }}
+                    >
+                      <button
+                        type="button"
+                        data-testid="pixal3d-model-select"
+                        disabled={!canEditGenerationSettings}
+                        className="flex h-10 w-full items-center justify-between rounded-full border border-white/10 bg-[#0d1730]/78 pl-4 pr-5 text-left text-sm font-semibold text-[#dbe1f2] outline-none transition hover:border-[#48bdff]/55 hover:bg-[#14213e] focus:border-[#48bdff] disabled:opacity-60"
+                        aria-haspopup="listbox"
+                        aria-expanded={openSettingsMenu === "model"}
+                        onClick={() => setOpenSettingsMenu((menu) => (menu === "model" ? null : "model"))}
+                      >
+                        <span>{settings.model}</span>
+                        <span aria-hidden="true" className={`h-2.5 w-2.5 rotate-45 border-b-2 border-r-2 border-[#dbe1f2]/78 transition-transform ${openSettingsMenu === "model" ? "-translate-y-[-2px] rotate-[225deg]" : "-translate-y-0.5"}`} />
+                      </button>
+                      {openSettingsMenu === "model" ? (
+                        <div
+                          role="listbox"
+                          className="absolute left-0 top-full z-30 mt-2 w-full overflow-hidden rounded-2xl border border-[#48bdff]/25 bg-[#0b1530]/98 p-1 shadow-[0_18px_48px_rgba(0,0,0,0.36),0_0_0_1px_rgba(255,255,255,0.03)] backdrop-blur"
+                        >
+                          {MODEL_OPTIONS.map((option) => {
+                            const isSelected = settings.model === option;
+                            return (
+                              <button
+                                key={option}
+                                type="button"
+                                role="option"
+                                aria-selected={isSelected}
+                                className={`flex h-10 w-full items-center justify-between rounded-xl px-4 text-left text-sm font-bold transition ${
+                                  isSelected
+                                    ? "bg-[#48bdff]/16 text-[#dff7ff]"
+                                    : "text-[#b9c4de] hover:bg-white/[0.06] hover:text-white"
+                                } disabled:cursor-not-allowed disabled:opacity-35`}
+                                onClick={() => {
+                                  updateSetting("model", option);
+                                  setOpenSettingsMenu(null);
+                                }}
+                              >
+                                <span>{option}</span>
+                                {isSelected ? <span aria-hidden="true" className="h-2 w-2 rounded-full bg-[#48bdff]" /> : null}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      ) : null}
+                    </div>
+                  </label>
                   <label className="flex min-w-0 flex-col gap-2">
                     <span className="text-xs font-bold uppercase tracking-normal text-[#8996b2]">{t.pixal3d.generator.settings.resolution}</span>
                     <div

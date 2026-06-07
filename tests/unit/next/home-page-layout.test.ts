@@ -51,11 +51,12 @@ describe("Next home page layout", () => {
     expect(pageSource).toContain("lg:grid-cols-[minmax(0,1.35fr)_minmax(440px,0.65fr)]");
     expect(pageSource).toContain("min-h-[320px]");
     expect(pageSource).toContain("lg:min-h-[248px]");
-    expect(pageSource).toContain("px-4 py-8");
-    expect(pageSource).toContain("border-white/10 bg-[#09142d]/58 hover:border-[#48bdff]/45");
+    expect(pageSource).toContain("flex min-h-[320px] flex-col gap-4 rounded-xl border border-white/10 bg-[#09142d]/58 p-4");
+    expect(pageSource).toContain("min-h-[156px] flex-1 resize-none rounded-xl border border-white/10 bg-[#050a16]/82");
+    expect(pageSource).toContain("data-testid=\"pixal3d-reference-upload\"");
     expect(pageSource).toContain('className="mt-4 rounded-xl bg-white/[0.025] px-3 py-3"');
     expect(pageSource).toContain("xl:grid-cols-[minmax(720px,1fr)_minmax(320px,440px)]");
-    expect(pageSource).toContain('useState<"aspectRatio" | "imageResolution" | "outputCount" | null>(null)');
+    expect(pageSource).toContain('useState<"model" | "aspectRatio" | "imageResolution" | "outputCount" | null>(null)');
     expect(pageSource).toContain("flex h-10 w-full items-center justify-between rounded-full border border-white/10 bg-[#0d1730]/78 pl-4 pr-5");
     expect(pageSource).toContain('role="listbox"');
     expect(pageSource).toContain("rounded-2xl border border-[#48bdff]/25 bg-[#0b1530]/98");
@@ -67,10 +68,15 @@ describe("Next home page layout", () => {
 
   it("offers simple image options while keeping the old API payload compatible", () => {
     expect(pageSource).toContain("type ApiTextureSizeOption = 1024 | 2048 | 4096;");
-    expect(pageSource).toContain('type ImageAspectRatioOption = "1:1" | "4:3" | "3:4" | "16:9" | "9:16";');
+    expect(pageSource).toContain('type ImageAspectRatioOption = "auto" | "1:1" | "1:4" | "1:8" | "2:3" | "3:2" | "3:4" | "4:1" | "4:3" | "4:5" | "5:4" | "8:1" | "9:16" | "16:9" | "21:9";');
     expect(pageSource).toContain('type ImageResolutionOption = "1K" | "2K" | "4K";');
-    expect(pageSource).toContain('const ASPECT_RATIO_OPTIONS: ImageAspectRatioOption[] = ["1:1", "4:3", "3:4", "16:9", "9:16"];');
+    expect(pageSource).toContain('const ASPECT_RATIO_OPTIONS: ImageAspectRatioOption[] = [');
+    expect(pageSource).toContain('"auto",');
+    expect(pageSource).toContain('"21:9",');
+    expect(pageSource).toContain('const MODEL_OPTIONS: ImageModelOption[] = ["Nano Banana 2"];');
     expect(pageSource).toContain('const IMAGE_RESOLUTION_OPTIONS: ImageResolutionOption[] = ["1K", "2K", "4K"];');
+    expect(pageSource).toContain("prompt: prompt.trim()");
+    expect(pageSource).toContain("model: settings.model");
     expect(pageSource).toContain("const apiResolution = IMAGE_RESOLUTION_TO_API_RESOLUTION[settings.imageResolution];");
     expect(pageSource).toContain("const apiTextureSize = IMAGE_RESOLUTION_TO_API_TEXTURE_SIZE[settings.imageResolution];");
     expect(pageSource).toContain("aspectRatio: settings.aspectRatio");
@@ -79,6 +85,21 @@ describe("Next home page layout", () => {
     expect(pageSource).toContain("textureSize: apiTextureSize");
     expect(pageSource).not.toContain('data-testid="pixal3d-advanced-settings-toggle"');
     expect(pageSource).not.toContain("ADVANCED_SETTING_FIELDS");
+  });
+
+  it("centers image generation on a prompt plus optional reference images", () => {
+    expect(pageSource).toContain('const MAX_REFERENCE_IMAGES = 14;');
+    expect(pageSource).toContain('const [prompt, setPrompt] = useState("");');
+    expect(pageSource).toContain('data-testid="pixal3d-prompt-input"');
+    expect(pageSource).toContain('maxLength={MAX_PROMPT_LENGTH}');
+    expect(pageSource).toContain('data-testid="pixal3d-reference-upload"');
+    expect(pageSource).toContain('data-testid="pixal3d-reference-count"');
+    expect(pageSource).toContain('{referenceImages.length}/{MAX_REFERENCE_IMAGES}');
+    expect(pageSource).toContain('multiple');
+    expect(pageSource).toContain('data-testid="pixal3d-model-select"');
+    expect(pageSource).toContain('Boolean(prompt.trim())');
+    expect(pageSource).not.toContain('t.pixal3d.generator.defaultPrompt');
+    expect(pageSource).not.toContain('showPageNotice("error", t.pixal3d.generator.errors.imageRequired)');
   });
 
   it("shows the retro computer image example result early in the generator card", () => {

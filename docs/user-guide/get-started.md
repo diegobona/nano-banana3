@@ -31,12 +31,6 @@ pnpm dev:next
 
 The app runs at `http://localhost:7001`.
 
-Start the docs app:
-
-```bash
-pnpm dev:docs
-```
-
 ## Verification
 
 ```bash

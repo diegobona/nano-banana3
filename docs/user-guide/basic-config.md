@@ -17,7 +17,6 @@ Place production public assets in:
 
 ```text
 apps/next-app/public/
-apps/docs-app/public/
 ```
 
 ## Environment

@@ -5,7 +5,6 @@ Pixal3D is a Next.js SaaS application for AI image-to-3D model generation, credi
 ## Apps
 
 - `apps/next-app`: production Next.js app.
-- `apps/docs-app`: Next.js documentation site.
 
 ## Shared Libraries
 

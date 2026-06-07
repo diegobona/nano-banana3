@@ -5,12 +5,11 @@ This project now uses a Next.js-only application architecture.
 ## Applications
 
 - `apps/next-app`: production Next.js app.
-- `apps/docs-app`: documentation site, also built with Next.js.
 
 ## Shared Code
 
 - `libs/*`: shared domain logic, integrations, services, database, auth, credits, i18n, storage, and UI helpers.
-- `libs/react-shared`: React components and hooks shared by the Next app and docs where useful.
+- `libs/react-shared`: React components and hooks used by the Next app.
 - `config/*` and `config.ts`: centralized application configuration.
 
 ## Common Commands

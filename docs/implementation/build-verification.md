@@ -4,14 +4,13 @@ This repository is Next-only for the production app.
 
 ## CI
 
-CI installs dependencies, builds `apps/next-app`, builds `apps/docs-app`, and verifies the Next Docker image.
+CI installs dependencies, builds `apps/next-app`, and verifies the Next Docker image.
 
 ## Local Commands
 
 ```bash
 pnpm typecheck:next
 pnpm build:next
-pnpm build:docs
 pnpm test
 pnpm test:e2e
 ```

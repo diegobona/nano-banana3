@@ -5,7 +5,6 @@ Pixal3D 是一个基于 Next.js 的 SaaS 应用，核心能力包括 AI 图片�
 ## 应用
 
 - `apps/next-app`: 生产用 Next.js 应用。
-- `apps/docs-app`: 基于 Next.js 的文档站。
 
 ## 共享库
 

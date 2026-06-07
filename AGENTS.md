@@ -7,7 +7,6 @@ Default feature-delivery checklist for this repository.
 ## Scope
 
 - Primary production app: `apps/next-app` (Next.js, React, App Router).
-- Docs app: `apps/docs-app` (Next.js documentation site).
 - Shared capability and business logic should live in `libs/*` and `config/*`, then be wired into `apps/next-app`.
 - React-specific shared components and hooks live in `libs/react-shared`.
 

@@ -14,31 +14,31 @@ describe("Next home SEO copy", () => {
   );
 
   it("uses the agreed search result metadata", () => {
-    expect(en.home.metadata.title).toBe("Pixal3D - AI Image to 3D Generator");
+    expect(en.home.metadata.title).toBe("Nano Banana - AI Image Generator");
     expect(en.home.metadata.description).toBe(
-      "Create AI 3D models from images with Pixal3D. Powered by the MIT-licensed Pixal3D project from TencentARC, with GLB export.",
+      "Create and edit images with Nano Banana AI. Upload a reference image, choose simple output settings, and generate polished image results.",
     );
   });
 
   it("uses concise hero copy without the old TencentARC trust line", () => {
-    expect(en.pixal3d.generator.heroTitle).toBe("Turn Any Image into a Faithful 3D Model");
-    expect(en.pixal3d.generator.subtitle).toBe("Free to try, no sign-in needed");
+    expect(en.pixal3d.generator.heroTitle).toBe("Create Images with Nano Banana AI");
+    expect(en.pixal3d.generator.subtitle).toBe("Generate polished images from prompts and references");
     expect(pageSource).not.toContain("t.pixal3d.generator.trustLine");
   });
 
   it("uses the requested trial and paid generation prompts", () => {
     expect(en.pixal3d.generator.trialDescription).toBe(
-      "Try Pixal3D without signing in. Two 15-minute sessions, no credits required.",
+      "Nano Banana image generation is moving into this workspace. Sign in to save results and use credits.",
     );
     expect(pageSource).toContain('const marker = "15-minute";');
     expect(en.pixal3d.generator.freeTrialButton).toBe("Start Free Trial");
     expect(pageSource).toContain("hover:before:opacity-80");
     expect(pageSource).not.toContain("-&gt;");
     expect(en.pixal3d.generator.errors.generateDisabledSignIn).toBe(
-      "Sign in and subscribe for faster and more stable generation, never offline. Free trial is available above.",
+      "Sign in and subscribe for faster and more stable image generation.",
     );
     expect(en.pixal3d.generator.errors.generateDisabledSubscribeRequired).toBe(
-      "Subscribe to generate models",
+      "Subscribe to generate images",
     );
     expect(en.pixal3d.generator.subscribeButton).toBe("Subscribe");
     expect(en.pixal3d.generator.subscribeToGenerateButton).toBe("Subscribe to Generate");
@@ -55,20 +55,20 @@ describe("Next home SEO copy", () => {
     expect(layoutSource).toContain("https://github.com/TencentARC/Pixal3D");
   });
 
-  it("keeps FAQ copy focused on trust and GLB export without adding extra entries", () => {
+  it("keeps FAQ copy focused on image generation without adding extra entries", () => {
     expect(Object.keys(en.pixal3d.faq.items)).toHaveLength(4);
     expect(en.pixal3d.faq.items.generator.answer).toBe(
-      "Pixal3D is an AI image-to-3D generator for creating faithful 3D models from reference images. It is powered by the MIT-licensed Pixal3D project from TencentARC.",
+      "Yes. This workspace is being converted into a Nano Banana AI image generator for prompt and reference-image workflows.",
     );
     expect(en.pixal3d.faq.items.oneImage.answer).toBe(
-      "Yes. Upload a clear single-object image and Pixal3D can generate a GLB 3D model online.",
+      "Yes. Upload a reference image to guide the generated image, or start from a prompt only in the upcoming backend step.",
     );
     expect(en.pixal3d.faq.items.bestImages.answer).toBe(
-      "Single-object images with a clean background, strong silhouette, and visible shape details usually work best.",
+      "Clear images with a strong subject, readable lighting, and minimal clutter usually produce better image generations.",
     );
-    expect(en.pixal3d.faq.items.formats.question).toBe("Can I export the result as a GLB file?");
+    expect(en.pixal3d.faq.items.formats.question).toBe("Can I download the generated image?");
     expect(en.pixal3d.faq.items.formats.answer).toBe(
-      "Yes. Pixal3D exports generated 3D models as GLB files for preview, download, and downstream 3D workflows.",
+      "Yes. Generated images appear inline and can be opened or downloaded from the result view and asset history.",
     );
   });
 });

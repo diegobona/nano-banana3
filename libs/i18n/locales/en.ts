@@ -15,9 +15,9 @@ export const en: Locale = {
   },
   home: {
     metadata: {
-      title: "Pixal3D - AI Image to 3D Generator",
-      description: "Create AI 3D models from images with Pixal3D. Powered by the MIT-licensed Pixal3D project from TencentARC, with GLB export.",
-      keywords: "pixal3d, image to 3d, ai 3d model generator, 3d model maker, image to glb, ai 3d assets"
+      title: "Nano Banana - AI Image Generator",
+      description: "Create and edit images with Nano Banana AI. Upload a reference image, choose simple output settings, and generate polished image results.",
+      keywords: "nano banana, ai image generator, ai image editing, text to image, image to image, ai art generator"
     }
   },
   header: {
@@ -40,25 +40,25 @@ export const en: Locale = {
   },
   pixal3d: {
     generator: {
-      heroTitle: "Turn Any Image into a Faithful 3D Model",
-      subtitle: "Free to try, no sign-in needed",
-      imageHint: "Single image input for the Pixal3D generation pipeline.",
+      heroTitle: "Create Images with Nano Banana AI",
+      subtitle: "Generate polished images from prompts and references",
+      imageHint: "Optional reference image for Nano Banana image generation.",
       imagePreviewAlt: "Uploaded reference image",
-      uploadButton: "Upload image",
+      uploadButton: "Upload reference image",
       dragDropPaste: "Drag & drop",
       orLabel: "OR",
       selectFileButton: "Select file",
-      samplePrompt: "No image? Try these:",
+      samplePrompt: "Try a reference:",
       useSample: "Use sample",
       removeImage: "Remove uploaded image",
       exampleResultTitle: "Example result",
-      exampleModelLabel: "3D result",
+      exampleModelLabel: "Generated image",
       featuresNav: "Features",
-      defaultPrompt: "Create a clean, game-ready 3D asset with accurate proportions, tidy topology, neutral studio lighting, and PBR-friendly materials.",
-      trialDescription: "Try Pixal3D without signing in. Two 15-minute sessions, no credits required.",
-      stylePreset: "Game Dev: High Poly",
-      cleanTopology: "Clean topology",
-      pbrMaterials: "PBR materials",
+      defaultPrompt: "Create a polished, high-detail image with clean composition, natural lighting, crisp edges, and a premium editorial finish.",
+      trialDescription: "Nano Banana image generation is moving into this workspace. Sign in to save results and use credits.",
+      stylePreset: "Creative image mode",
+      cleanTopology: "Prompt guided",
+      pbrMaterials: "Reference aware",
       subscribeButton: "Subscribe",
       subscribeToGenerateButton: "Subscribe to Generate",
       upgradeButton: "Upgrade",
@@ -67,33 +67,34 @@ export const en: Locale = {
       freeTrialLoading: "Finding server...",
       freeTrialSelected: "Free trial server is ready.",
       freeTrialExpired: "Free trial session ended.",
-      hfTrialTitle: "Pixal3D Free Trial",
+      hfTrialTitle: "Nano Banana Preview",
       hfTrialQueueLabel: "Current queue",
       hfTrialTimeLeft: "Time left",
       hfTrialStartHint: "If the \"Start Generation\" button is disabled, please wait a few seconds while the server finishes loading.",
       hfTrialClose: "Close",
       hfTrialFindingTitle: "Finding an available server",
-      hfTrialFindingDescription: "We are checking the free trial pool and reserving a live Pixal3D session for you. This usually takes a few seconds.",
+      hfTrialFindingDescription: "We are preparing a Nano Banana preview session. This usually takes a few seconds.",
       hfTrialLoadingTitle: "Loading your free trial workspace",
       hfTrialLoadingDescription: "The server is ready. The workspace is opening now, so keep this tab open for a moment.",
-      generateButton: "Generate Model",
-      generatingButton: "Building model...",
-      resultTitle: "3D model is ready",
-      previewTitle: "Preview 3D Model",
-      previewLoading: "Loading model...",
-      previewErrorTitle: "Model preview failed",
-      previewErrorDescription: "The preview could not load this GLB. You can still download the file and open it in another 3D viewer.",
-      previewModelButton: "Preview GLB",
+      generateButton: "Generate Image",
+      generatingButton: "Generating image...",
+      resultTitle: "Image is ready",
+      previewTitle: "Generated Image",
+      previewLoading: "Loading image...",
+      previewErrorTitle: "Image preview failed",
+      previewErrorDescription: "The image preview could not load. You can still open or download the result.",
+      previewModelButton: "Open image",
       closePreviewButton: "Close preview",
-      openModelButton: "Open GLB",
-      downloadModelButton: "Download GLB",
+      openModelButton: "Open image",
+      downloadModelButton: "Download image",
       settings: {
-        resolution: "Target Resolution",
-        textureSize: "Texture Size",
-        advanceSettings: "Advanced Settings",
+        resolution: "Image Resolution",
+        textureSize: "Aspect Ratio",
+        outputCount: "Images",
+        advanceSettings: "Image Settings",
         showAdvanceSettings: "Expand settings",
         hideAdvanceSettings: "Collapse settings",
-        advancedSettingsSummary: "15 controls",
+        advancedSettingsSummary: "Simple controls",
         on: "On",
         off: "Off",
         fields: {
@@ -115,26 +116,26 @@ export const en: Locale = {
         }
       },
       status: {
-        idle: "Upload an image to start.",
-        ready: "Image ready. Generate your model.",
-        creating: "Creating 3D task...",
-        processing: "Building the GLB...",
+        idle: "Upload a reference image or start from a prompt.",
+        ready: "Reference image ready. Generate your image.",
+        creating: "Creating image task...",
+        processing: "Generating the image...",
         stillChecking: "Still checking in My Assets...",
-        succeeded: "3D model is ready."
+        succeeded: "Image is ready."
       },
       progress: {
         title: "Generation progress",
-        completedTitle: "3D model is ready",
+        completedTitle: "Image is ready",
         checkingTitle: "Still checking the result",
         failedTitle: "Generation stopped",
         steps: {
           submitting: "Submitting request",
-          waitingForRunner: "Waiting for runner",
-          preparingImage: "Preparing image",
-          samplingSparseStructure: "Sampling sparse structure",
-          samplingShapeSLat: "Sampling shape SLat",
-          samplingTextureSLat: "Sampling texture SLat",
-          buildingMesh: "Building mesh and GLB",
+          waitingForRunner: "Connecting to Nano Banana",
+          preparingImage: "Preparing reference image",
+          enhancingPrompt: "Enhancing prompt",
+          generatingImage: "Generating image",
+          refiningImage: "Refining details",
+          savingImage: "Saving image result",
           finalizingPreview: "Finalizing preview"
         }
       },
@@ -143,76 +144,76 @@ export const en: Locale = {
         imageTooLarge: "Image must be 10 MB or smaller.",
         uploadFailed: "Could not read the image. Please try another file.",
         imageRequired: "Upload a reference image first.",
-        signInRequired: "Sign in or upgrade to generate and save models.",
-        generationFailed: "3D generation failed.",
-        statusFailed: "Could not check the 3D task status.",
-        timeout: "3D generation timed out. Please try again.",
-        statusStillChecking: "Your model is still being checked.",
+        signInRequired: "Sign in or upgrade to generate and save images.",
+        generationFailed: "Image generation failed.",
+        statusFailed: "Could not check the image task status.",
+        timeout: "Image generation timed out. Please try again.",
+        statusStillChecking: "Your image is still being checked.",
         statusStillCheckingDescription: "The task was submitted, but this page could not confirm the final result yet. Check My Assets in a few minutes.",
         timeoutStillChecking: "The task is taking longer than expected. It may still finish in My Assets.",
         freeTrialBusy: "Free trial server is busy, try again later",
         freeTrialLimitReached: "Free trials used. Sign in and subscribe to generate.",
         trialUsed: "Free trial already used",
-        trialUsedDescription: "Create an account to continue generating Pixal3D models.",
-        generateDisabledSignIn: "Sign in and subscribe for faster and more stable generation, never offline. Free trial is available above.",
-        generateDisabledSubscribeRequired: "Subscribe to generate models",
+        trialUsedDescription: "Create an account to continue generating Nano Banana images.",
+        generateDisabledSignIn: "Sign in and subscribe for faster and more stable image generation.",
+        generateDisabledSubscribeRequired: "Subscribe to generate images",
         generateDisabledFreeTrialAbove: "Faster and more stable generation, never offline. Free trial is available above.",
         generateDisabledInsufficientCredits: "Not enough credits.",
         generateDisabledImageRequired: "Upload an image first",
         generateDisabledReadingImage: "Reading image...",
-        insufficientCredits: "Not enough credits for 3D generation.",
-        insufficientCreditsDescription: "This resolution requires {required} credits. Your current balance is {balance} credits."
+        insufficientCredits: "Not enough credits for image generation.",
+        insufficientCreditsDescription: "This image setting requires {required} credits. Your current balance is {balance} credits."
       }
     },
     advantages: {
-      eyebrow: "Pixal3D Advantages",
-      title: "Why choose Pixal3D",
+      eyebrow: "Nano Banana Advantages",
+      title: "Why choose Nano Banana",
       items: {
         faithful: {
-          title: "Faithful to your image",
-          description: "Generate 3D models that stay closer to the original shape, style, and visual identity of your input image."
+          title: "Reference-aware image generation",
+          description: "Use an uploaded image as visual direction while creating a fresh, polished result."
         },
         pixelAligned: {
-          title: "Pixel-aligned 3D generation",
-          description: "Build a stronger connection between 2D image pixels and 3D space for clearer image-to-3D results."
+          title: "Prompt-guided control",
+          description: "Turn concise prompts into clear compositions without exposing a wall of technical controls."
         },
         geometry: {
-          title: "Detailed geometry reconstruction",
-          description: "Capture object contours, structures, and shape details instead of settling for an overly simplified 3D model."
+          title: "High-detail image output",
+          description: "Generate crisp details, clean edges, and balanced scenes suitable for product and creative workflows."
         },
         pbr: {
-          title: "PBR texture generation",
-          description: "Create 3D models with richer physically based textures for more realistic GLB previews and 3D asset projects."
+          title: "Simple creative settings",
+          description: "Choose aspect ratio, resolution, and output count without managing model-specific internals."
         },
         fast: {
-          title: "Fast model generation",
-          description: "Complete model generation quickly for image-to-3D model and GLB preparation tests."
+          title: "Fast iteration",
+          description: "Explore image directions quickly, save results, and continue from your asset history."
         }
       }
     },
     inspiration: {
-      eyebrow: "Model Inspiration Gallery",
-      title: "Explore example 3D model directions for your next generation",
-      generateSimilar: "Click to generate a similar 3D model"
+      eyebrow: "Image Inspiration Gallery",
+      title: "Explore visual directions for your next Nano Banana generation",
+      generateSimilar: "Click to generate a similar image"
     },
     faq: {
       title: "FAQ",
       items: {
         generator: {
-          question: "Is Pixal3D an AI 3D model generator?",
-          answer: "Pixal3D is an AI image-to-3D generator for creating faithful 3D models from reference images. It is powered by the MIT-licensed Pixal3D project from TencentARC."
+          question: "Is Nano Banana an AI image generator?",
+          answer: "Yes. This workspace is being converted into a Nano Banana AI image generator for prompt and reference-image workflows."
         },
         oneImage: {
-          question: "Can Pixal3D create a 3D model from one image?",
-          answer: "Yes. Upload a clear single-object image and Pixal3D can generate a GLB 3D model online."
+          question: "Can I use a reference image?",
+          answer: "Yes. Upload a reference image to guide the generated image, or start from a prompt only in the upcoming backend step."
         },
         bestImages: {
-          question: "What images work best for image-to-3D generation?",
-          answer: "Single-object images with a clean background, strong silhouette, and visible shape details usually work best."
+          question: "What references work best?",
+          answer: "Clear images with a strong subject, readable lighting, and minimal clutter usually produce better image generations."
         },
         formats: {
-          question: "Can I export the result as a GLB file?",
-          answer: "Yes. Pixal3D exports generated 3D models as GLB files for preview, download, and downstream 3D workflows."
+          question: "Can I download the generated image?",
+          answer: "Yes. Generated images appear inline and can be opened or downloaded from the result view and asset history."
         }
       }
     }

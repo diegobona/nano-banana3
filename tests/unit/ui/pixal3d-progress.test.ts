@@ -14,10 +14,10 @@ describe('Pixal3D progress planner', () => {
       'submitting',
       'waitingForRunner',
       'preparingImage',
-      'samplingSparseStructure',
-      'samplingShapeSLat',
-      'samplingTextureSLat',
-      'buildingMesh',
+      'enhancingPrompt',
+      'generatingImage',
+      'refiningImage',
+      'savingImage',
       'finalizingPreview',
     ]);
     expect(plan[0]).toMatchObject({ startPercent: 0, endPercent: 8 });

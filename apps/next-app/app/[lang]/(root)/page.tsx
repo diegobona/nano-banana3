@@ -1,7 +1,6 @@
 "use client";
 
-import { createElement, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { GlbPreviewDialog } from "@/components/glb-preview-dialog";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   PIXAL3D_PROGRESS_STEPS,
   createPixal3DProgressPlan,
@@ -11,10 +10,6 @@ import {
   type Pixal3DProgressStepKey,
   type Pixal3DProgressStatus,
 } from "@/lib/pixal3d-progress";
-import {
-  get3DPlanEntitlement,
-  type ThreeDPlanEntitlement,
-} from "@libs/ai/3d-entitlements";
 import { Button } from "@libs/react-shared/ui/button";
 import { Input } from "@libs/react-shared/ui/input";
 import { useTranslation } from "@/hooks/use-translation";
@@ -29,7 +24,9 @@ import {
 type TaskStatus = "idle" | "upload-ready" | "processing" | "checking" | "succeeded" | "failed";
 type ResolutionOption = 1024 | 1536;
 type ApiTextureSizeOption = 1024 | 2048 | 4096;
-type TextureSizeOption = ApiTextureSizeOption | 8192;
+type ImageAspectRatioOption = "1:1" | "4:3" | "3:4" | "16:9" | "9:16";
+type ImageResolutionOption = "1K" | "2K" | "4K";
+type OutputCountOption = 1 | 2 | 4;
 type PageNoticeType = "error" | "info" | "success";
 
 interface PageNotice {
@@ -43,8 +40,9 @@ interface PageNotice {
 }
 
 interface Pixal3DSettings {
-  resolution: ResolutionOption;
-  textureSize: TextureSizeOption;
+  aspectRatio: ImageAspectRatioOption;
+  imageResolution: ImageResolutionOption;
+  outputCount: OutputCountOption;
   decimationTarget: number;
   maxNumTokens: number;
   meshScale: number;
@@ -67,7 +65,6 @@ interface SampleImage {
   name: string;
   src: string;
   transparentSrc?: string;
-  modelUrl?: string;
 }
 
 interface GenerateResponse {
@@ -93,8 +90,10 @@ interface StatusResponse {
     id: string;
     status: "processing" | "succeeded" | "failed";
     result?: {
-      modelUrl: string;
-      format: "glb";
+      imageUrl?: string;
+      images?: string[];
+      modelUrl?: string;
+      format?: "glb" | "png" | "jpeg" | "webp";
       provider: string;
       model: string;
       thumbnailUrl?: string;
@@ -136,21 +135,29 @@ interface CreditStatusResponse {
 const POLL_INTERVAL_MS = 3000;
 const POLL_TIMEOUT_MS = 10 * 60 * 1000;
 const FREE_TRIAL_DURATION_SECONDS = 15 * 60;
-const RESOLUTION_OPTIONS: ResolutionOption[] = [1024, 1536];
-const TEXTURE_SIZE_OPTIONS: TextureSizeOption[] = [1024, 2048, 4096, 8192];
-const API_TEXTURE_SIZE_BY_UI_TEXTURE_SIZE: Record<TextureSizeOption, ApiTextureSizeOption> = {
-  1024: 1024,
-  2048: 2048,
-  4096: 4096,
-  8192: 4096,
+const SHOW_LEGACY_HF_TRIAL = false;
+const ASPECT_RATIO_OPTIONS: ImageAspectRatioOption[] = ["1:1", "4:3", "3:4", "16:9", "9:16"];
+const IMAGE_RESOLUTION_OPTIONS: ImageResolutionOption[] = ["1K", "2K", "4K"];
+const OUTPUT_COUNT_OPTIONS: OutputCountOption[] = [1, 2, 4];
+const IMAGE_RESOLUTION_TO_API_RESOLUTION: Record<ImageResolutionOption, ResolutionOption> = {
+  "1K": 1024,
+  "2K": 1536,
+  "4K": 1536,
 };
-const RESOLUTION_CREDIT_COST: Record<ResolutionOption, number> = {
-  1024: 1000,
-  1536: 1500,
+const IMAGE_RESOLUTION_TO_API_TEXTURE_SIZE: Record<ImageResolutionOption, ApiTextureSizeOption> = {
+  "1K": 1024,
+  "2K": 2048,
+  "4K": 4096,
+};
+const IMAGE_RESOLUTION_CREDIT_COST: Record<ImageResolutionOption, number> = {
+  "1K": 1000,
+  "2K": 1500,
+  "4K": 1500,
 };
 const DEFAULT_PIXAL3D_SETTINGS: Pixal3DSettings = {
-  resolution: 1024,
-  textureSize: 1024,
+  aspectRatio: "1:1",
+  imageResolution: "1K",
+  outputCount: 1,
   decimationTarget: 200000,
   maxNumTokens: 49152,
   meshScale: 1,
@@ -167,22 +174,6 @@ const DEFAULT_PIXAL3D_SETTINGS: Pixal3DSettings = {
   textureRescaleT: 3,
   remesh: true,
 };
-const ADVANCED_SETTING_FIELDS = [
-  { key: "decimationTarget", min: 5000, max: 2000000, step: 1000 },
-  { key: "maxNumTokens", min: 4096, max: 131072, step: 1024 },
-  { key: "meshScale", min: 0.1, max: 10, step: 0.1 },
-  { key: "sparseStructureGuidanceStrength", min: 0, max: 10, step: 0.1 },
-  { key: "sparseStructureGuidanceRescale", min: 0, max: 1, step: 0.1 },
-  { key: "sparseStructureSteps", min: 1, max: 50, step: 1 },
-  { key: "sparseStructureRescaleT", min: 1, max: 6, step: 0.1 },
-  { key: "shapeGuidanceStrength", min: 0, max: 10, step: 0.1 },
-  { key: "shapeGuidanceRescale", min: 0, max: 1, step: 0.1 },
-  { key: "shapeSteps", min: 1, max: 50, step: 1 },
-  { key: "shapeRescaleT", min: 1, max: 6, step: 0.1 },
-  { key: "textureGuidanceStrength", min: 0, max: 10, step: 0.1 },
-  { key: "textureSteps", min: 1, max: 50, step: 1 },
-  { key: "textureRescaleT", min: 1, max: 6, step: 0.1 },
-] as const;
 const PIXAL3D_REFERENCE_ASSET_BASE = "https://ldyang694.github.io/projects/pixal3d";
 const SAMPLE_IMAGES: SampleImage[] = [
   {
@@ -211,74 +202,62 @@ const INSPIRATION_IMAGES: SampleImage[] = [
     id: "chair",
     name: "Stylized chair",
     src: `${PIXAL3D_REFERENCE_ASSET_BASE}/compa/image/chair.png`,
-    modelUrl: `${PIXAL3D_REFERENCE_ASSET_BASE}/compa/pixal3d/chair.glb`,
   },
   {
     id: "city",
     name: "Floating city",
     src: `${PIXAL3D_REFERENCE_ASSET_BASE}/compa/image/city.jpg`,
-    modelUrl: `${PIXAL3D_REFERENCE_ASSET_BASE}/compa/pixal3d/city.glb`,
   },
   {
     id: "keyboard",
     name: "Retro computer",
     src: `${PIXAL3D_REFERENCE_ASSET_BASE}/compa/image/keyboard.jpg`,
     transparentSrc: "/samples/retro-computer-transparent.png",
-    modelUrl: "/samples/keyboard-preview.glb",
   },
   {
     id: "picnic",
     name: "Picnic basket",
     src: `${PIXAL3D_REFERENCE_ASSET_BASE}/compa/image/picnic.jpg`,
-    modelUrl: `${PIXAL3D_REFERENCE_ASSET_BASE}/compa/pixal3d/picnic.glb`,
   },
   {
     id: "pizza",
     name: "Pizza slice",
     src: `${PIXAL3D_REFERENCE_ASSET_BASE}/compa/image/pizza.png`,
-    modelUrl: `${PIXAL3D_REFERENCE_ASSET_BASE}/compa/pixal3d/pizza.glb`,
   },
   {
     id: "treehouse",
     name: "Treehouse",
     src: `${PIXAL3D_REFERENCE_ASSET_BASE}/compa/image/treehouse.png`,
-    modelUrl: `${PIXAL3D_REFERENCE_ASSET_BASE}/compa/pixal3d/treehouse.glb`,
   },
   {
     id: "windhouse",
     name: "Windmill house",
     src: `${PIXAL3D_REFERENCE_ASSET_BASE}/compa/image/windhouse.png`,
-    modelUrl: `${PIXAL3D_REFERENCE_ASSET_BASE}/compa/pixal3d/windhouse.glb`,
   },
   {
     id: "result-0",
     name: "Armored turtle",
     src: `${PIXAL3D_REFERENCE_ASSET_BASE}/results/0_img.png`,
-    modelUrl: `${PIXAL3D_REFERENCE_ASSET_BASE}/results/0_mesh.glb`,
   },
   {
     id: "result-1",
     name: "Fantasy relic",
     src: `${PIXAL3D_REFERENCE_ASSET_BASE}/results/1_img.png`,
-    modelUrl: `${PIXAL3D_REFERENCE_ASSET_BASE}/results/1_mesh.glb`,
   },
   {
     id: "result-10",
     name: "Creature concept",
     src: `${PIXAL3D_REFERENCE_ASSET_BASE}/results/10_img.webp`,
-    modelUrl: `${PIXAL3D_REFERENCE_ASSET_BASE}/results/10_mesh.glb`,
   },
   {
     id: "result-12",
     name: "Fantasy building",
     src: `${PIXAL3D_REFERENCE_ASSET_BASE}/results/12_img.png`,
-    modelUrl: `${PIXAL3D_REFERENCE_ASSET_BASE}/results/12_mesh.glb`,
   },
   {
     id: "result-21",
     name: "Scene concept",
     src: `${PIXAL3D_REFERENCE_ASSET_BASE}/results/21_img.png`,
-    modelUrl: `${PIXAL3D_REFERENCE_ASSET_BASE}/results/21_mesh.glb`,
   },
 ];
 const DEFAULT_EXAMPLE_RESULT =
@@ -292,31 +271,17 @@ const ADVANTAGE_KEYS = [
 ] as const;
 const FAQ_KEYS = ["generator", "oneImage", "bestImages", "formats"] as const;
 
-function getMaxSelectableTextureSize(entitlement: ThreeDPlanEntitlement | null): TextureSizeOption {
-  if (!entitlement) {
-    return 8192;
-  }
-
-  if (entitlement.tier === "creator" || entitlement.tier === "pro") {
-    return 8192;
-  }
-
-  return entitlement.maxTextureSize;
-}
-
 export default function Home() {
   const { t, locale, localizedPath } = useTranslation();
   const { data: session, isPending: isSessionPending } = authClientReact.useSession();
   const [imageDataUrl, setImageDataUrl] = useState("");
   const [imageName, setImageName] = useState("");
-  const [generatedModelUrl, setGeneratedModelUrl] = useState("");
-  const [isGlbPreviewOpen, setIsGlbPreviewOpen] = useState(false);
+  const [generatedImageUrl, setGeneratedImageUrl] = useState("");
   const [progressPlan, setProgressPlan] = useState<Pixal3DProgressPlanStep[]>(() => createPixal3DProgressPlan());
   const [progressStartedAt, setProgressStartedAt] = useState<number | null>(null);
   const [progressSnapshot, setProgressSnapshot] = useState<Pixal3DProgressSnapshot | null>(null);
   const [settings, setSettings] = useState<Pixal3DSettings>(DEFAULT_PIXAL3D_SETTINGS);
-  const [openSettingsMenu, setOpenSettingsMenu] = useState<"resolution" | "textureSize" | null>(null);
-  const [isAdvancedSettingsOpen, setIsAdvancedSettingsOpen] = useState(false);
+  const [openSettingsMenu, setOpenSettingsMenu] = useState<"aspectRatio" | "imageResolution" | "outputCount" | null>(null);
   const [taskStatus, setTaskStatus] = useState<TaskStatus>("idle");
   const [taskMessage, setTaskMessage] = useState(t.pixal3d.generator.status.idle);
   const [isReadingFile, setIsReadingFile] = useState(false);
@@ -335,18 +300,10 @@ export default function Home() {
   const [pageNotice, setPageNotice] = useState<PageNotice | null>(null);
   const hfTrialRequestIdRef = useRef(0);
 
-  const requiredCredits = RESOLUTION_CREDIT_COST[settings.resolution];
+  const requiredCredits = IMAGE_RESOLUTION_CREDIT_COST[settings.imageResolution];
   const isAuthenticated = Boolean(session?.user);
   const hasEnoughCredits = creditBalance >= requiredCredits;
-  const planEntitlement = useMemo<ThreeDPlanEntitlement | null>(
-    () => get3DPlanEntitlement(subscriptionPlanId),
-    [subscriptionPlanId]
-  );
-  const hasPaidSubscription = Boolean(planEntitlement && planEntitlement.tier !== "free");
-  const maxSelectableTextureSize = useMemo(
-    () => getMaxSelectableTextureSize(planEntitlement),
-    [planEntitlement]
-  );
+  const hasPaidSubscription = Boolean(subscriptionPlanId);
   const canEditGenerationSettings = taskStatus !== "processing";
   const canGenerate = useMemo(() => {
     return Boolean(
@@ -445,8 +402,6 @@ export default function Home() {
   }, [t.pixal3d.generator.status.idle]);
 
   useEffect(() => {
-    void import("@google/model-viewer");
-
     const head = document.head;
     const preconnectLink = document.createElement("link");
     preconnectLink.rel = "preconnect";
@@ -515,18 +470,6 @@ export default function Home() {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [loadCreditStatus]);
-
-  useEffect(() => {
-    setSettings((current) => ({
-      ...current,
-      resolution: planEntitlement && current.resolution > planEntitlement.maxResolution
-        ? planEntitlement.maxResolution
-        : current.resolution,
-      textureSize: current.textureSize > maxSelectableTextureSize
-        ? maxSelectableTextureSize
-        : current.textureSize,
-    }));
-  }, [maxSelectableTextureSize, planEntitlement]);
 
   useEffect(() => {
     if (!hfTrialEndsAt || !hfTrialUrl) return;
@@ -628,8 +571,7 @@ export default function Home() {
       });
       setImageDataUrl(dataUrl);
       setImageName(file.name);
-      setGeneratedModelUrl("");
-      setIsGlbPreviewOpen(false);
+      setGeneratedImageUrl("");
       setProgressSnapshot(null);
       setProgressStartedAt(null);
       setTaskStatus("upload-ready");
@@ -653,8 +595,7 @@ export default function Home() {
     clearPageNotice();
     setImageDataUrl(resolvedImageSrc);
     setImageName(sample.name);
-    setGeneratedModelUrl("");
-    setIsGlbPreviewOpen(false);
+    setGeneratedImageUrl("");
     setProgressSnapshot(null);
     setProgressStartedAt(null);
     setTaskStatus("upload-ready");
@@ -666,12 +607,6 @@ export default function Home() {
       ...current,
       [key]: value,
     }));
-  };
-
-  const updateNumberSetting = (key: keyof Omit<Pixal3DSettings, "remesh">, value: string) => {
-    const parsed = Number(value);
-    if (!Number.isFinite(parsed)) return;
-    updateSetting(key, parsed as never);
   };
 
   const completeProgress = (
@@ -712,8 +647,15 @@ export default function Home() {
         throw new Pixal3DGenerationStatusUnknownError(data.message || t.pixal3d.generator.errors.statusStillCheckingDescription);
       }
 
-      if (data.data.status === "succeeded" && data.data.result?.modelUrl) {
-        return data.data.result.modelUrl;
+      if (data.data.status === "succeeded" && data.data.result) {
+        const imageUrl = data.data.result.imageUrl
+          || data.data.result.images?.[0]
+          || data.data.result.thumbnailUrl
+          || data.data.result.modelUrl;
+
+        if (imageUrl) {
+          return imageUrl;
+        }
       }
 
       if (data.data.status === "failed") {
@@ -744,14 +686,14 @@ export default function Home() {
     clearPageNotice();
     setTaskStatus("processing");
     setTaskMessage(t.pixal3d.generator.status.creating);
-    setGeneratedModelUrl("");
-    setIsGlbPreviewOpen(false);
+    setGeneratedImageUrl("");
     const nextProgressPlan = createPixal3DProgressPlan();
     const nextProgressStartedAt = Date.now();
     setProgressPlan(nextProgressPlan);
     setProgressStartedAt(nextProgressStartedAt);
     setProgressSnapshot(getPixal3DProgressSnapshot(nextProgressPlan, 0, "processing"));
-    const apiTextureSize = API_TEXTURE_SIZE_BY_UI_TEXTURE_SIZE[settings.textureSize];
+    const apiResolution = IMAGE_RESOLUTION_TO_API_RESOLUTION[settings.imageResolution];
+    const apiTextureSize = IMAGE_RESOLUTION_TO_API_TEXTURE_SIZE[settings.imageResolution];
 
     try {
       const response = await fetch("/api/3d-generate", {
@@ -761,7 +703,10 @@ export default function Home() {
           imageUrl: imageDataUrl,
           prompt: t.pixal3d.generator.defaultPrompt,
           quality: "standard",
-          ...settings,
+          aspectRatio: settings.aspectRatio,
+          imageResolution: settings.imageResolution,
+          outputCount: settings.outputCount,
+          resolution: apiResolution,
           textureSize: apiTextureSize,
         }),
       });
@@ -819,10 +764,9 @@ export default function Home() {
         dispatchCreditBalanceUpdated(data.credits.remaining);
       }
 
-      const modelUrl = await pollTask(data.data);
-      setGeneratedModelUrl(modelUrl);
+      const imageUrl = await pollTask(data.data);
+      setGeneratedImageUrl(imageUrl);
       completeProgress(nextProgressPlan, nextProgressStartedAt, "succeeded");
-      setIsGlbPreviewOpen(true);
       setTaskStatus("succeeded");
       setTaskMessage(t.pixal3d.generator.status.succeeded);
     } catch (error) {
@@ -908,9 +852,8 @@ export default function Home() {
       <link rel="preconnect" href={PIXAL3D_REFERENCE_ASSET_BASE} crossOrigin="anonymous" />
       <link
         rel="preload"
-        href={DEFAULT_EXAMPLE_RESULT.modelUrl}
-        as="fetch"
-        type="model/gltf-binary"
+        href={DEFAULT_EXAMPLE_RESULT.transparentSrc ?? DEFAULT_EXAMPLE_RESULT.src}
+        as="image"
         crossOrigin="anonymous"
       />
       <section className="relative min-h-[calc(100vh-4rem)] border-l border-r border-[#2b3657] bg-[radial-gradient(circle_at_50%_-10%,rgba(22,91,173,0.22),transparent_42%),linear-gradient(180deg,#071431_0%,#0a1737_46%,#071431_100%)] px-4 py-4 sm:px-6 sm:py-5 lg:px-8">
@@ -924,10 +867,11 @@ export default function Home() {
             </p>
           </div>
 
-          <div
-            data-testid="pixal3d-free-trial-callout"
-            className="mt-4 w-full max-w-[1420px] overflow-hidden rounded-2xl border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.055),rgba(255,255,255,0.025))] shadow-[0_12px_38px_rgba(0,0,0,0.12)] backdrop-blur"
-          >
+          {SHOW_LEGACY_HF_TRIAL ? (
+            <div
+              data-testid="pixal3d-free-trial-callout"
+              className="mt-4 w-full max-w-[1420px] overflow-hidden rounded-2xl border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.055),rgba(255,255,255,0.025))] shadow-[0_12px_38px_rgba(0,0,0,0.12)] backdrop-blur"
+            >
             <div className="flex flex-col gap-3 px-4 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:px-5">
               <p className="min-w-0 text-sm font-semibold leading-6 text-[#dce7ff] sm:text-base">
                 {highlightedTrialDescription}
@@ -945,7 +889,8 @@ export default function Home() {
                 <span className="relative z-10">{isOpeningHfTrial ? t.pixal3d.generator.freeTrialLoading : t.pixal3d.generator.freeTrialButton}</span>
               </Button>
             </div>
-          </div>
+            </div>
+          ) : null}
 
           {pageNotice && (
             <div
@@ -1038,8 +983,7 @@ export default function Home() {
                         event.stopPropagation();
                         setImageDataUrl("");
                         setImageName("");
-                        setGeneratedModelUrl("");
-                        setIsGlbPreviewOpen(false);
+                        setGeneratedImageUrl("");
                         setTaskStatus("idle");
                         setTaskMessage(t.pixal3d.generator.status.idle);
                       }}
@@ -1124,25 +1068,14 @@ export default function Home() {
 
                 <div>
                   <div
-                    data-testid="pixal3d-example-model-viewer-wrap"
-                    className="aspect-[1.08] overflow-visible"
+                    data-testid="pixal3d-example-image-result"
+                    className="aspect-[1.08] overflow-hidden rounded-[28px] border border-[#48bdff]/20 bg-[#091426] shadow-[0_18px_42px_rgba(72,189,255,0.12)]"
                   >
-                    {createElement("model-viewer", {
-                      "data-testid": "pixal3d-example-model-viewer",
-                      src: DEFAULT_EXAMPLE_RESULT.modelUrl,
-                      alt: t.pixal3d.generator.exampleModelLabel,
-                      "auto-rotate": true,
-                      "auto-rotate-delay": "0",
-                      "rotation-per-second": "24deg",
-                      "camera-orbit": "35deg 72deg auto",
-                      "interaction-prompt": "none",
-                      "shadow-intensity": "0.8",
-                      exposure: "1",
-                      "environment-image": "neutral",
-                      loading: "eager",
-                      className: "block h-full w-full",
-                      style: { width: "100%", height: "100%", background: "transparent" },
-                    })}
+                    <img
+                      src={DEFAULT_EXAMPLE_RESULT.src}
+                      alt={t.pixal3d.generator.exampleModelLabel}
+                      className="h-full w-full object-cover"
+                    />
                   </div>
                 </div>
               </div>
@@ -1166,38 +1099,36 @@ export default function Home() {
                     >
                       <button
                         type="button"
-                        data-testid="pixal3d-resolution-select"
+                        data-testid="pixal3d-image-resolution-select"
                         disabled={!canEditGenerationSettings}
                         className="flex h-10 w-full items-center justify-between rounded-full border border-white/10 bg-[#0d1730]/78 pl-4 pr-5 text-left text-sm font-semibold text-[#dbe1f2] outline-none transition hover:border-[#48bdff]/55 hover:bg-[#14213e] focus:border-[#48bdff] disabled:opacity-60"
                         aria-haspopup="listbox"
-                        aria-expanded={openSettingsMenu === "resolution"}
-                        onClick={() => setOpenSettingsMenu((menu) => (menu === "resolution" ? null : "resolution"))}
+                        aria-expanded={openSettingsMenu === "imageResolution"}
+                        onClick={() => setOpenSettingsMenu((menu) => (menu === "imageResolution" ? null : "imageResolution"))}
                       >
-                        <span>{settings.resolution}</span>
-                        <span aria-hidden="true" className={`h-2.5 w-2.5 rotate-45 border-b-2 border-r-2 border-[#dbe1f2]/78 transition-transform ${openSettingsMenu === "resolution" ? "-translate-y-[-2px] rotate-[225deg]" : "-translate-y-0.5"}`} />
+                        <span>{settings.imageResolution}</span>
+                        <span aria-hidden="true" className={`h-2.5 w-2.5 rotate-45 border-b-2 border-r-2 border-[#dbe1f2]/78 transition-transform ${openSettingsMenu === "imageResolution" ? "-translate-y-[-2px] rotate-[225deg]" : "-translate-y-0.5"}`} />
                       </button>
-                      {openSettingsMenu === "resolution" ? (
+                      {openSettingsMenu === "imageResolution" ? (
                         <div
                           role="listbox"
                           className="absolute left-0 top-full z-30 mt-2 w-full overflow-hidden rounded-2xl border border-[#48bdff]/25 bg-[#0b1530]/98 p-1 shadow-[0_18px_48px_rgba(0,0,0,0.36),0_0_0_1px_rgba(255,255,255,0.03)] backdrop-blur"
                         >
-                          {RESOLUTION_OPTIONS.map((option) => {
-                            const isDisabled = Boolean(planEntitlement && option > planEntitlement.maxResolution);
-                            const isSelected = settings.resolution === option;
+                          {IMAGE_RESOLUTION_OPTIONS.map((option) => {
+                            const isSelected = settings.imageResolution === option;
                             return (
                               <button
                                 key={option}
                                 type="button"
                                 role="option"
                                 aria-selected={isSelected}
-                                disabled={isDisabled}
                                 className={`flex h-10 w-full items-center justify-between rounded-xl px-4 text-left text-sm font-bold transition ${
                                   isSelected
                                     ? "bg-[#48bdff]/16 text-[#dff7ff]"
                                     : "text-[#b9c4de] hover:bg-white/[0.06] hover:text-white"
                                 } disabled:cursor-not-allowed disabled:opacity-35`}
                                 onClick={() => {
-                                  updateSetting("resolution", option);
+                                  updateSetting("imageResolution", option);
                                   setOpenSettingsMenu(null);
                                 }}
                               >
@@ -1222,38 +1153,36 @@ export default function Home() {
                     >
                       <button
                         type="button"
-                        data-testid="pixal3d-texture-size-select"
+                        data-testid="pixal3d-aspect-ratio-select"
                         disabled={!canEditGenerationSettings}
                         className="flex h-10 w-full items-center justify-between rounded-full border border-white/10 bg-[#0d1730]/78 pl-4 pr-5 text-left text-sm font-semibold text-[#dbe1f2] outline-none transition hover:border-[#48bdff]/55 hover:bg-[#14213e] focus:border-[#48bdff] disabled:opacity-60"
                         aria-haspopup="listbox"
-                        aria-expanded={openSettingsMenu === "textureSize"}
-                        onClick={() => setOpenSettingsMenu((menu) => (menu === "textureSize" ? null : "textureSize"))}
+                        aria-expanded={openSettingsMenu === "aspectRatio"}
+                        onClick={() => setOpenSettingsMenu((menu) => (menu === "aspectRatio" ? null : "aspectRatio"))}
                       >
-                        <span>{settings.textureSize}</span>
-                        <span aria-hidden="true" className={`h-2.5 w-2.5 rotate-45 border-b-2 border-r-2 border-[#dbe1f2]/78 transition-transform ${openSettingsMenu === "textureSize" ? "-translate-y-[-2px] rotate-[225deg]" : "-translate-y-0.5"}`} />
+                        <span>{settings.aspectRatio}</span>
+                        <span aria-hidden="true" className={`h-2.5 w-2.5 rotate-45 border-b-2 border-r-2 border-[#dbe1f2]/78 transition-transform ${openSettingsMenu === "aspectRatio" ? "-translate-y-[-2px] rotate-[225deg]" : "-translate-y-0.5"}`} />
                       </button>
-                      {openSettingsMenu === "textureSize" ? (
+                      {openSettingsMenu === "aspectRatio" ? (
                         <div
                           role="listbox"
                           className="absolute left-0 top-full z-30 mt-2 w-full overflow-hidden rounded-2xl border border-[#48bdff]/25 bg-[#0b1530]/98 p-1 shadow-[0_18px_48px_rgba(0,0,0,0.36),0_0_0_1px_rgba(255,255,255,0.03)] backdrop-blur"
                         >
-                          {TEXTURE_SIZE_OPTIONS.map((option) => {
-                            const isDisabled = option > maxSelectableTextureSize;
-                            const isSelected = settings.textureSize === option;
+                          {ASPECT_RATIO_OPTIONS.map((option) => {
+                            const isSelected = settings.aspectRatio === option;
                             return (
                               <button
                                 key={option}
                                 type="button"
                                 role="option"
                                 aria-selected={isSelected}
-                                disabled={isDisabled}
                                 className={`flex h-10 w-full items-center justify-between rounded-xl px-4 text-left text-sm font-bold transition ${
                                   isSelected
                                     ? "bg-[#48bdff]/16 text-[#dff7ff]"
                                     : "text-[#b9c4de] hover:bg-white/[0.06] hover:text-white"
                                 } disabled:cursor-not-allowed disabled:opacity-35`}
                                 onClick={() => {
-                                  updateSetting("textureSize", option);
+                                  updateSetting("aspectRatio", option);
                                   setOpenSettingsMenu(null);
                                 }}
                               >
@@ -1267,37 +1196,28 @@ export default function Home() {
                     </div>
                   </label>
                   <div className="flex min-w-0 flex-col gap-2 sm:col-span-2 lg:col-span-1">
-                    <span className="text-xs font-bold uppercase tracking-normal text-[#8996b2]">{t.pixal3d.generator.settings.advanceSettings}</span>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      data-testid="pixal3d-advanced-settings-toggle"
-                      className={`h-10 justify-between rounded-full px-4 text-sm font-semibold shadow-none transition hover:text-white ${
-                        isAdvancedSettingsOpen
-                          ? "border-[#48bdff]/70 bg-[#113555]/82 text-white shadow-[0_10px_28px_rgba(72,189,255,0.12)]"
-                          : "border-white/10 bg-[#0d1730]/78 text-[#dbe1f2] hover:border-[#48bdff]/55 hover:bg-[#14213e]"
-                      }`}
-                      disabled={!canEditGenerationSettings}
-                      aria-expanded={isAdvancedSettingsOpen}
-                      onClick={() => setIsAdvancedSettingsOpen((open) => !open)}
-                    >
-                      <span className="flex min-w-0 flex-col items-start leading-none">
-                        <span>{isAdvancedSettingsOpen ? t.pixal3d.generator.settings.hideAdvanceSettings : t.pixal3d.generator.settings.showAdvanceSettings}</span>
-                        <span className="mt-0.5 text-[11px] font-semibold text-[#8996b2]">
-                          {t.pixal3d.generator.settings.advancedSettingsSummary}
-                        </span>
-                      </span>
-                      <span
-                        aria-hidden="true"
-                        className={`ml-4 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-lg leading-none transition ${
-                          isAdvancedSettingsOpen
-                            ? "border-[#48bdff] bg-[#48bdff] text-[#051021]"
-                            : "border-white/10 bg-white/[0.04] text-[#dbe1f2]"
-                        }`}
-                      >
-                        {isAdvancedSettingsOpen ? "-" : "+"}
-                      </span>
-                    </Button>
+                    <span className="text-xs font-bold uppercase tracking-normal text-[#8996b2]">{t.pixal3d.generator.settings.outputCount}</span>
+                    <div className="grid h-10 grid-cols-3 rounded-full border border-white/10 bg-[#0d1730]/78 p-1">
+                      {OUTPUT_COUNT_OPTIONS.map((option) => {
+                        const isSelected = settings.outputCount === option;
+                        return (
+                          <button
+                            key={option}
+                            type="button"
+                            data-testid={`pixal3d-output-count-${option}`}
+                            disabled={!canEditGenerationSettings}
+                            className={`rounded-full text-sm font-extrabold transition disabled:opacity-60 ${
+                              isSelected
+                                ? "bg-[#48bdff] text-[#051021]"
+                                : "text-[#b9c4de] hover:bg-white/[0.06] hover:text-white"
+                            }`}
+                            onClick={() => updateSetting("outputCount", option)}
+                          >
+                            {option}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
 
@@ -1331,58 +1251,6 @@ export default function Home() {
                 </div>
               </div>
 
-              {isAdvancedSettingsOpen && (
-                <div
-                  data-testid="pixal3d-advanced-settings-panel"
-                  className="mt-5 rounded-lg border border-[#48bdff]/55 bg-[#0a1430]/92 p-4 shadow-[0_20px_80px_rgba(72,189,255,0.12)]"
-                >
-                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                    {ADVANCED_SETTING_FIELDS.map((field) => (
-                      <label key={field.key} className="flex min-w-0 flex-col gap-2">
-                        <span className="text-xs font-extrabold uppercase tracking-normal text-[#aeb6ca]">
-                          {t.pixal3d.generator.settings.fields[field.key]}
-                        </span>
-                        <Input
-                          data-testid={`pixal3d-setting-${field.key}`}
-                          type="number"
-                          min={field.min}
-                          max={field.max}
-                          step={field.step}
-                          value={settings[field.key]}
-                          disabled={!canEditGenerationSettings}
-                          onChange={(event) => updateNumberSetting(field.key, event.target.value)}
-                          className="h-11 rounded-md border-[#313b59] bg-[#121a30] text-base font-bold text-[#dbe1f2] outline-none focus:border-[#48bdff] disabled:opacity-60"
-                        />
-                      </label>
-                    ))}
-                    <div className="flex min-w-0 flex-col gap-2">
-                      <span className="text-xs font-extrabold uppercase tracking-normal text-[#aeb6ca]">
-                        {t.pixal3d.generator.settings.fields.remesh}
-                      </span>
-                      <button
-                        type="button"
-                        role="switch"
-                        aria-checked={settings.remesh}
-                        data-testid="pixal3d-setting-remesh"
-                        disabled={!canEditGenerationSettings}
-                        onClick={() => updateSetting("remesh", !settings.remesh)}
-                        className={`flex h-11 items-center justify-between rounded-md border px-4 text-sm font-extrabold transition disabled:opacity-60 ${
-                          settings.remesh
-                            ? "border-[#48bdff] bg-[#123e65] text-white"
-                            : "border-[#313b59] bg-[#121a30] text-[#aeb6ca]"
-                        }`}
-                      >
-                        <span>{settings.remesh ? t.pixal3d.generator.settings.on : t.pixal3d.generator.settings.off}</span>
-                        <span className={`flex h-6 w-11 items-center rounded-full p-1 transition ${
-                          settings.remesh ? "justify-end bg-[#48bdff]" : "justify-start bg-[#28324f]"
-                        }`}>
-                          <span className="h-4 w-4 rounded-full bg-white" />
-                        </span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
 
@@ -1417,15 +1285,16 @@ export default function Home() {
                     ? `${PIXAL3D_PROGRESS_STEPS.length}/${PIXAL3D_PROGRESS_STEPS.length}`
                     : `${progressSnapshot.currentStepIndex + 1}/${PIXAL3D_PROGRESS_STEPS.length}`}
                 </div>
-                {progressSnapshot.status === "succeeded" && generatedModelUrl && (
-                  <Button
-                    type="button"
-                    data-testid="pixal3d-preview-model-button"
-                    className="h-11 rounded-full bg-[#48bdff] px-5 text-sm font-extrabold text-[#051021] hover:bg-[#71ccff]"
-                    onClick={() => setIsGlbPreviewOpen(true)}
+                {progressSnapshot.status === "succeeded" && generatedImageUrl && (
+                  <a
+                    data-testid="pixal3d-open-image-button"
+                    className="inline-flex h-11 items-center justify-center rounded-full bg-[#48bdff] px-5 text-sm font-extrabold text-[#051021] transition hover:bg-[#71ccff]"
+                    href={generatedImageUrl}
+                    target="_blank"
+                    rel="noreferrer"
                   >
                     {t.pixal3d.generator.previewModelButton}
-                  </Button>
+                  </a>
                 )}
               </div>
 
@@ -1455,18 +1324,46 @@ export default function Home() {
             </div>
           )}
 
-          {generatedModelUrl && (
-            <GlbPreviewDialog
-              open={isGlbPreviewOpen}
-              modelUrl={generatedModelUrl}
-              title={t.pixal3d.generator.previewTitle}
-              closeLabel={t.pixal3d.generator.closePreviewButton}
-              downloadLabel={t.pixal3d.generator.downloadModelButton}
-              loadingLabel={t.pixal3d.generator.previewLoading}
-              errorTitle={t.pixal3d.generator.previewErrorTitle}
-              errorDescription={t.pixal3d.generator.previewErrorDescription}
-              onClose={() => setIsGlbPreviewOpen(false)}
-            />
+          {generatedImageUrl && (
+            <section
+              data-testid="pixal3d-generated-image-result"
+              className="mt-6 w-full max-w-[1420px] overflow-hidden rounded-2xl border border-[#48bdff]/20 bg-[#081326]/92 shadow-[0_24px_90px_rgba(0,0,0,0.2)]"
+            >
+              <div className="flex flex-col gap-5 p-5 lg:flex-row lg:items-center">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-extrabold uppercase tracking-[0.12em] text-[#7fdaff]">
+                    {t.pixal3d.generator.resultTitle}
+                  </p>
+                  <h2 className="mt-2 text-2xl font-extrabold text-white">
+                    {t.pixal3d.generator.previewTitle}
+                  </h2>
+                </div>
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <a
+                    href={generatedImageUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex h-11 items-center justify-center rounded-full border border-[#48bdff]/40 px-5 text-sm font-extrabold text-[#dff7ff] transition hover:bg-[#48bdff]/10"
+                  >
+                    {t.pixal3d.generator.openModelButton}
+                  </a>
+                  <a
+                    href={generatedImageUrl}
+                    download
+                    className="inline-flex h-11 items-center justify-center rounded-full bg-[#00f08a] px-5 text-sm font-extrabold text-[#04101e] transition hover:bg-[#55ffb2]"
+                  >
+                    {t.pixal3d.generator.downloadModelButton}
+                  </a>
+                </div>
+              </div>
+              <div className="border-t border-white/10 bg-[#050c1b] p-4">
+                <img
+                  src={generatedImageUrl}
+                  alt={t.pixal3d.generator.previewTitle}
+                  className="mx-auto max-h-[720px] w-full max-w-[960px] rounded-xl object-contain"
+                />
+              </div>
+            </section>
           )}
 
           {isHfTrialModalOpen && (
@@ -1627,25 +1524,9 @@ export default function Home() {
                           src={item.src}
                           alt=""
                           className={`absolute inset-0 h-full w-full object-cover transition duration-300 ${
-                            isActive ? "scale-[0.94] opacity-0" : "scale-100 opacity-100"
+                            isActive ? "scale-105 opacity-95" : "scale-100 opacity-100"
                           }`}
                         />
-                        {isActive && item.modelUrl ? (
-                          <span className="absolute inset-0 overflow-hidden rounded-[28px] bg-[radial-gradient(circle_at_50%_18%,rgba(72,189,255,0.12),transparent_42%),#091426]">
-                            {createElement("model-viewer", {
-                              src: item.modelUrl,
-                              "auto-rotate": true,
-                              "rotation-per-second": "28deg",
-                              "camera-orbit": "35deg 75deg auto",
-                              "interaction-prompt": "none",
-                              "shadow-intensity": "0.8",
-                              exposure: "1",
-                              "environment-image": "neutral",
-                              loading: "eager",
-                              style: { width: "100%", height: "100%", pointerEvents: "none" },
-                            })}
-                          </span>
-                        ) : null}
                       </span>
                       {isActive ? (
                         <span className="absolute -bottom-2 left-1/2 hidden w-[184px] -translate-x-1/2 rounded-lg border border-[#2a5279] bg-[#081425] px-4 py-2 text-xs font-semibold leading-5 text-[#d8f4ff] shadow-[0_12px_30px_rgba(0,0,0,0.22)] md:inline-flex md:justify-center">

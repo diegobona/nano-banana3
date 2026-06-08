@@ -285,10 +285,11 @@ export const en: Locale = {
   },
   pricing: {
     metadata: {
-      title: "Pixal3D Pricing - Credits for AI 3D Models",
-      description: "Choose Pixal3D credits for image-to-3D generation, GLB downloads, queue priority, and private asset ownership.",
-      keywords: "pixal3d pricing, ai 3d model credits, image to 3d subscription"
+      title: "NanoBanana Pricing - Credits for AI Image Generation",
+      description: "Choose NanoBanana credits for prompt-based image generation, reference-image workflows, queue priority, and private image history.",
+      keywords: "NanoBanana pricing, AI image generation credits, reference image subscription"
     },
+    subtitle: "Choose the credits plan that fits your AI image workflow.",
     freeTrialNotice: "Two Free Trial sessions (Each session lasts 15 minutes, no credits required)",
     yearlyDiscountBadge: "Save about 20%",
     billedYearly: "Billed yearly: ${amount}",
@@ -302,9 +303,9 @@ export const en: Locale = {
       features: [
         "Custom monthly credits",
         "Custom concurrent tasks",
-        "Unlimited downloads per day",
+        "Unlimited image downloads per day",
         "Maximum queue priority",
-        "Private asset ownership",
+        "Private image history",
         "Workflow and onboarding support"
       ]
     }

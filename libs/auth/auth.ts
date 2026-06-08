@@ -7,7 +7,7 @@ import { account, db, session, user, verification } from "@libs/database";
 export { toNextJsHandler } from "better-auth/next-js";
 
 export const auth = betterAuth({
-  appName: "Pixal3D",
+  appName: "NanoBanana",
   trustedOrigins: [
     ...(process.env.APP_BASE_URL ? [process.env.APP_BASE_URL] : []),
     ...(process.env.BETTER_AUTH_URL ? [process.env.BETTER_AUTH_URL] : []),

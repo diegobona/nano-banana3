@@ -192,7 +192,7 @@ export default function Header({ className }: HeaderProps) {
               data-testid="pixal3d-source-badge"
               className="hidden rounded-full border border-[#48bdff]/35 bg-[#071a33] px-2.5 py-1 text-[11px] font-extrabold leading-none tracking-normal text-[#7ee7ff] shadow-[0_0_24px_rgba(72,189,255,0.16)] sm:inline-flex"
             >
-              From TencentARC
+              AI Image Generator
             </span>
           </Link>
 

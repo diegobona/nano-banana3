@@ -87,7 +87,7 @@ export default function PricingPage() {
       <section className="mx-auto max-w-7xl">
         <div className="text-center">
           <h1 className="text-4xl font-bold tracking-normal sm:text-5xl">Pricing</h1>
-          <p className="mt-4 text-lg text-muted-foreground">Choose the credits plan that fits your 3D workflow.</p>
+          <p className="mt-4 text-lg text-muted-foreground">{t.pricing.subtitle}</p>
 
           <div className="mt-8 inline-flex rounded-xl bg-muted p-1">
             <button

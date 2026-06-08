@@ -9,7 +9,7 @@ export type { RecurringPlan, OneTimePlan, CreditPlan, Plan } from './config/type
 
 export const config = {
   app: {
-    name: 'Pixal3D',
+    name: 'NanoBanana',
     logo: {
       iconUrl: '/logo.svg',
       fullLogoUrl: '' as string | undefined,

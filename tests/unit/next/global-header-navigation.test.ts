@@ -22,8 +22,9 @@ describe("global header navigation", () => {
     expect(headerSource).toContain("href={homeHref}");
   });
 
-  it("shows the TencentARC source badge beside the brand", () => {
-    expect(headerSource).toContain("From TencentARC");
+  it("shows the NanoBanana image-generation badge beside the brand", () => {
+    expect(headerSource).toContain("AI Image Generator");
     expect(headerSource).toContain('data-testid="pixal3d-source-badge"');
+    expect(headerSource).not.toContain("From TencentARC");
   });
 });

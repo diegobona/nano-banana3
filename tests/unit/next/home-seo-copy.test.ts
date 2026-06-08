@@ -51,8 +51,9 @@ describe("Next home SEO copy", () => {
   it("emits WebApplication structured data for the Next route", () => {
     expect(layoutSource).toContain('type="application/ld+json"');
     expect(layoutSource).toContain('"@type": "WebApplication"');
-    expect(layoutSource).toContain('"isBasedOn"');
-    expect(layoutSource).toContain("https://github.com/TencentARC/Pixal3D");
+    expect(layoutSource).toContain('siteName: \'NanoBanana\'');
+    expect(layoutSource).toContain('name: "NanoBanana"');
+    expect(layoutSource).not.toContain("https://github.com/TencentARC/Pixal3D");
   });
 
   it("keeps FAQ copy focused on image generation without adding extra entries", () => {

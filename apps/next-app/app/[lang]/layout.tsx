@@ -6,7 +6,7 @@ import { use } from 'react';
 import { translations } from "@libs/i18n";
 import { SharedAppWrapper } from "@/components/shared-app-wrapper";
 
-const DEFAULT_APP_URL = "https://pixal3d.net";
+const DEFAULT_APP_URL = "https://nano-banana3.art";
 
 function getAppUrl() {
   return (process.env.APP_BASE_URL || DEFAULT_APP_URL).replace(/\/$/, "");
@@ -58,7 +58,7 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
       type: 'website',
       locale: lang,
       url: appUrl,
-      siteName: 'Pixal3D',
+      siteName: 'NanoBanana',
       title: t.home.metadata.title,
       description: t.home.metadata.description,
       images: [
@@ -96,16 +96,15 @@ export default function RootLayout({
   const webApplicationJsonLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "Pixal3D",
+    name: "NanoBanana",
     applicationCategory: "DesignApplication",
     operatingSystem: "Web",
     url: appUrl,
     description: t.home.metadata.description,
     "isBasedOn": {
       "@type": "SoftwareSourceCode",
-      name: "Pixal3D",
-      url: "https://github.com/TencentARC/Pixal3D",
-      license: "https://github.com/TencentARC/Pixal3D/blob/main/LICENSE",
+      name: "NanoBanana",
+      url: "https://nano-banana3.art",
     },
   };
   

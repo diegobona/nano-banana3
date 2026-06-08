@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { config } from '../../../config';
 
-describe('Pixal3D pricing plans', () => {
+describe('NanoBanana pricing plans', () => {
   it('exposes Free plus public Starter and Creator credit plans with yearly monthly refresh', () => {
     const plans = Object.values(config.payment.plans);
 
@@ -22,6 +22,7 @@ describe('Pixal3D pricing plans', () => {
     expect(freePlan.i18n.en.features).toContain('1 concurrent task');
     expect(freePlan.i18n.en.features).not.toContain('Asset ownership: shared sample license');
     expect(freePlan.i18n.en.features).not.toContain('3D generation resolution: up to 1024');
+    expect(freePlan.i18n.en.features).toContain('Image output resolution: up to 1K');
 
     const paidPlans = plans.filter((plan) => plan.id !== 'free');
     expect(paidPlans.every((plan) => plan.provider === 'stripe')).toBe(true);
@@ -40,22 +41,22 @@ describe('Pixal3D pricing plans', () => {
     expect(config.payment.plans.proYearly.showInPricing).toBe(false);
     expect(config.payment.plans.starterMonthly.i18n.en.features).toContain('15,000 credits/month');
     expect(config.payment.plans.starterMonthly.i18n.en.features).toContain('2 concurrent tasks');
-    expect(config.payment.plans.starterMonthly.i18n.en.features).toContain('Unlimited downloads per day');
-    expect(config.payment.plans.starterMonthly.i18n.en.features).toContain('3D generation resolution: up to 1536');
-    expect(config.payment.plans.starterMonthly.i18n.en.features).toContain('PBR texture size: up to 4K');
+    expect(config.payment.plans.starterMonthly.i18n.en.features).toContain('Unlimited image downloads per day');
+    expect(config.payment.plans.starterMonthly.i18n.en.features).toContain('Image output resolution: up to 2K');
+    expect(config.payment.plans.starterMonthly.i18n.en.features).toContain('Reference images and prompt workflows');
     expect(config.payment.plans.starterMonthly.i18n.en.features).not.toContain('20 downloads per day');
     expect(config.payment.plans.creatorMonthly.i18n.en.features).toContain('40,000 credits/month');
     expect(config.payment.plans.creatorMonthly.i18n.en.features).toContain('4 concurrent tasks');
-    expect(config.payment.plans.creatorMonthly.i18n.en.features).toContain('PBR texture size: up to 8K');
+    expect(config.payment.plans.creatorMonthly.i18n.en.features).toContain('Image output resolution: up to 4K');
     expect(config.payment.plans.starterYearly.i18n.en.features).toContain('15,000 credits/month');
     expect(config.payment.plans.starterYearly.i18n.en.features).toContain('2 concurrent tasks');
-    expect(config.payment.plans.starterYearly.i18n.en.features).toContain('Unlimited downloads per day');
-    expect(config.payment.plans.starterYearly.i18n.en.features).toContain('3D generation resolution: up to 1536');
-    expect(config.payment.plans.starterYearly.i18n.en.features).toContain('PBR texture size: up to 4K');
+    expect(config.payment.plans.starterYearly.i18n.en.features).toContain('Unlimited image downloads per day');
+    expect(config.payment.plans.starterYearly.i18n.en.features).toContain('Image output resolution: up to 2K');
+    expect(config.payment.plans.starterYearly.i18n.en.features).toContain('Reference images and prompt workflows');
     expect(config.payment.plans.starterYearly.i18n.en.features).not.toContain('20 downloads per day');
     expect(config.payment.plans.creatorYearly.i18n.en.features).toContain('40,000 credits/month');
     expect(config.payment.plans.creatorYearly.i18n.en.features).toContain('4 concurrent tasks');
-    expect(config.payment.plans.creatorYearly.i18n.en.features).toContain('PBR texture size: up to 8K');
+    expect(config.payment.plans.creatorYearly.i18n.en.features).toContain('Image output resolution: up to 4K');
     expect(config.payment.plans.starterYearly.i18n.en.features).toContain('Credits refresh monthly');
     expect(config.payment.plans.creatorYearly.i18n.en.features).toContain('Credits refresh monthly');
     expect(plans.every((plan) => plan.recommended !== true)).toBe(true);
@@ -64,7 +65,14 @@ describe('Pixal3D pricing plans', () => {
     expect(paidPlans.every((plan) => plan.i18n.en.features.some((feature) => feature.includes('credits')))).toBe(true);
     expect(plans.every((plan) => plan.i18n.en.features.some((feature) => feature.includes('concurrent')))).toBe(true);
     expect(paidPlans.every((plan) => plan.i18n.en.features.some((feature) => feature.includes('downloads')))).toBe(true);
-    expect(paidPlans.every((plan) => plan.i18n.en.features.some((feature) => feature.includes('Asset ownership')))).toBe(true);
+    expect(paidPlans.every((plan) => plan.i18n.en.features.some((feature) => feature.includes('Private image history')))).toBe(true);
     expect(plans.every((plan) => !plan.i18n.en.features.some((feature) => feature.includes('Commercial use')))).toBe(true);
+
+    const visibleCopy = plans.flatMap((plan) => [
+      plan.i18n.en.description,
+      ...plan.i18n.en.features,
+    ]).join('\n');
+
+    expect(visibleCopy).not.toMatch(/image-to-3D|3D generation|PBR texture|model history|model/i);
   });
 });

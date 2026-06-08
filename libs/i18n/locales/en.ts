@@ -228,14 +228,14 @@ export const en: Locale = {
   auth: {
     metadata: {
       signin: {
-        title: "Pixal3D - Sign In",
-        description: "Sign in to Pixal3D to generate and manage AI 3D models.",
-        keywords: "Pixal3D login, sign in, AI 3D model account"
+        title: "NanoBanana - Sign In",
+        description: "Sign in to NanoBanana to generate, save, and manage AI images.",
+        keywords: "NanoBanana login, sign in, AI image generator account"
       },
       signup: {
-        title: "Pixal3D - Sign Up",
-        description: "Create a Pixal3D account to save AI 3D model history and use credits.",
-        keywords: "Pixal3D sign up, create account, AI 3D model account"
+        title: "NanoBanana - Sign Up",
+        description: "Create a NanoBanana account to save AI image history and use credits.",
+        keywords: "NanoBanana sign up, create account, AI image generator account"
       }
     },
     signin: {
@@ -265,7 +265,7 @@ export const en: Locale = {
     },
     signup: {
       title: "Create your account",
-      description: "Use email and password to create a Pixal3D account.",
+      description: "Use email and password to create a NanoBanana account.",
       name: "Name",
       namePlaceholder: "Enter your name",
       email: "Email",
@@ -313,14 +313,14 @@ export const en: Locale = {
   payment: {
     metadata: {
       success: {
-        title: "Payment Successful - Pixal3D",
-        description: "Your Pixal3D payment was processed successfully.",
-        keywords: "payment successful, Pixal3D subscription"
+        title: "Payment Successful - NanoBanana",
+        description: "Your NanoBanana payment was processed successfully.",
+        keywords: "payment successful, NanoBanana subscription, AI image generation credits"
       },
       cancel: {
-        title: "Payment Canceled - Pixal3D",
-        description: "Your Pixal3D payment was canceled.",
-        keywords: "payment canceled, Pixal3D checkout"
+        title: "Payment Canceled - NanoBanana",
+        description: "Your NanoBanana payment was canceled.",
+        keywords: "payment canceled, NanoBanana checkout, AI image generation credits"
       }
     },
     result: {
@@ -345,12 +345,12 @@ export const en: Locale = {
   },
   blog: {
     metadata: {
-      title: "Pixal3D Blog",
-      description: "Read Pixal3D updates and guides for AI 3D model generation.",
-      keywords: "Pixal3D blog, AI 3D model guide, image to 3D"
+      title: "NanoBanana Blog",
+      description: "Read NanoBanana guides for AI image generation, prompt workflows, reference images, and image editing.",
+      keywords: "NanoBanana blog, AI image generator guide, reference image workflow, image-to-image editing"
     },
     title: "Blog",
-    subtitle: "Pixal3D updates and guides",
+    subtitle: "NanoBanana image generation guides",
     publishedOn: "Published on",
     by: "by",
     noPosts: "No posts yet. Check back soon!",
@@ -358,9 +358,9 @@ export const en: Locale = {
   },
   dashboard: {
     metadata: {
-      title: "Pixal3D Dashboard",
-      description: "View your Pixal3D subscription, credits, and account details.",
-      keywords: "Pixal3D dashboard, subscription, credits"
+      title: "NanoBanana Dashboard",
+      description: "View your NanoBanana subscription, image generation credits, and account details.",
+      keywords: "NanoBanana dashboard, AI image generation credits, subscription"
     },
     eyebrow: "Account",
     title: "Dashboard",
@@ -383,7 +383,7 @@ export const en: Locale = {
     },
     credits: {
       label: "Credits",
-      description: "Available credits for Pixal3D model generation."
+      description: "Available credits for NanoBanana image generation."
     },
     account: {
       label: "Account",
@@ -399,23 +399,23 @@ export const en: Locale = {
   myAssets: {
     eyebrow: "Your Library",
     title: "My Assets",
-    description: "Review your recent Pixal3D generation tasks and reopen completed GLB models.",
+    description: "Review your recent NanoBanana image generation tasks and reopen completed images.",
     actions: {
       create: "Create",
       refresh: "Refresh",
-      preview3DModel: "Preview 3D Model",
-      openModel: "Open GLB",
-      sourceImage: "Source Image",
+      preview3DModel: "Preview Image",
+      openModel: "Open Image",
+      sourceImage: "Reference Image",
       previous: "Previous",
       next: "Next"
     },
     empty: {
       title: "No generation history yet",
-      description: "Create your first 3D model and it will appear here."
+      description: "Create your first AI image and it will appear here."
     },
     card: {
       targetResolution: "Target Resolution",
-      textureSize: "Texture Size",
+      textureSize: "Aspect Ratio",
       createdAt: "Created",
       credits: "Credits",
       creditsUsed: "Credits Used",
@@ -434,8 +434,8 @@ export const en: Locale = {
       blog: "Blog"
     },
     home: {
-      title: "Pixal3D Docs",
-      description: "Guides and references for running the Pixal3D Next.js app.",
+      title: "NanoBanana Docs",
+      description: "Guides and references for running the NanoBanana Next.js app.",
       cta: {
         docs: "Read Docs",
         blog: "Read Blog"
@@ -443,7 +443,7 @@ export const en: Locale = {
     },
     blog: {
       title: "Blog",
-      description: "Pixal3D updates and implementation notes.",
+      description: "NanoBanana image generation updates and implementation notes.",
       allPosts: "All Posts",
       previousPage: "Previous",
       nextPage: "Next",

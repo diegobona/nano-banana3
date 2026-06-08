@@ -5,7 +5,7 @@ import { getStaticBlogPosts } from "@/lib/static-blog-posts";
 import { blogPost, db } from "@libs/database";
 import { blogPostStatus } from "@libs/database/schema/blog-post";
 
-const DEFAULT_APP_URL = "https://pixal3d.net";
+const DEFAULT_APP_URL = "https://nano-banana3.art";
 const LOCALES = ["en", "zh-CN"] as const;
 const DEFAULT_LOCALE = "en";
 

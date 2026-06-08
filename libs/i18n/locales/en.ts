@@ -15,8 +15,8 @@ export const en: Locale = {
   },
   home: {
     metadata: {
-      title: "Nano Banana - AI Image Generator",
-      description: "Create and edit images with Nano Banana AI. Upload a reference image, choose simple output settings, and generate polished image results.",
+      title: "Nano Banana 3 AI Image Generator – Launch Tracker, Prompts & Free Online Tool",
+      description: "Nano Banana 3 AI image generator and editor. Track the release, compare Nano Banana 3 vs Nano Banana 2 and Nano Banana Pro, try prompt and reference-image workflows online.",
       keywords: "nano banana, ai image generator, ai image editing, text to image, image to image, ai art generator"
     }
   },
@@ -40,7 +40,7 @@ export const en: Locale = {
   },
   pixal3d: {
     generator: {
-      heroTitle: "Create Images with Nano Banana AI",
+      heroTitle: "Nano Banana 3 AI Image Generator",
       subtitle: "Generate polished images from prompts and references",
       promptLabel: "Prompt",
       promptDescription: "Describe what you want to generate",

@@ -14,14 +14,16 @@ describe("Next home SEO copy", () => {
   );
 
   it("uses the agreed search result metadata", () => {
-    expect(en.home.metadata.title).toBe("Nano Banana - AI Image Generator");
+    expect(en.home.metadata.title).toBe(
+      "Nano Banana 3 AI Image Generator – Launch Tracker, Prompts & Free Online Tool",
+    );
     expect(en.home.metadata.description).toBe(
-      "Create and edit images with Nano Banana AI. Upload a reference image, choose simple output settings, and generate polished image results.",
+      "Nano Banana 3 AI image generator and editor. Track the release, compare Nano Banana 3 vs Nano Banana 2 and Nano Banana Pro, try prompt and reference-image workflows online.",
     );
   });
 
   it("uses concise hero copy without the old TencentARC trust line", () => {
-    expect(en.pixal3d.generator.heroTitle).toBe("Create Images with Nano Banana AI");
+    expect(en.pixal3d.generator.heroTitle).toBe("Nano Banana 3 AI Image Generator");
     expect(en.pixal3d.generator.subtitle).toBe("Generate polished images from prompts and references");
     expect(pageSource).not.toContain("t.pixal3d.generator.trustLine");
   });

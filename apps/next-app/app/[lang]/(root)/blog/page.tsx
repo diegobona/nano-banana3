@@ -6,7 +6,7 @@ import { eq, desc } from "drizzle-orm";
 import { translations } from "@libs/i18n";
 import type { Metadata } from "next";
 import { Button } from "@libs/react-shared/ui/button";
-import { getStaticBlogPosts } from "@/lib/static-blog-posts";
+import { getBlogListPosts, paginateBlogPosts } from "@/lib/blog-list-posts";
 
 const PAGE_SIZE = 12;
 
@@ -26,15 +26,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function BlogListPage({ params, searchParams }: Props) {
-  const { lang } = await params;
-  const { page: pageParam } = await searchParams;
-  const t = translations[lang as keyof typeof translations];
-
-  const page = Math.max(1, parseInt(pageParam || "1", 10));
-  const offset = (page - 1) * PAGE_SIZE;
-
-  const dbPosts = await db
+async function loadPublishedDatabaseBlogPosts() {
+  return db
     .select({
       id: blogPost.id,
       title: blogPost.title,
@@ -48,27 +41,16 @@ export default async function BlogListPage({ params, searchParams }: Props) {
     .leftJoin(user, eq(blogPost.authorId, user.id))
     .where(eq(blogPost.status, blogPostStatus.PUBLISHED))
     .orderBy(desc(blogPost.publishedAt));
+}
 
-  const posts = [
-    ...getStaticBlogPosts().map((post) => ({
-      id: post.id,
-      title: post.title,
-      slug: post.slug,
-      excerpt: post.excerpt,
-      coverImage: post.coverImage,
-      publishedAt: post.publishedAt,
-      authorName: post.authorName,
-    })),
-    ...dbPosts,
-  ].sort((left, right) => {
-    const leftTime = left.publishedAt ? new Date(left.publishedAt).getTime() : 0;
-    const rightTime = right.publishedAt ? new Date(right.publishedAt).getTime() : 0;
-    return rightTime - leftTime;
-  });
+export default async function BlogListPage({ params, searchParams }: Props) {
+  const { lang } = await params;
+  const { page: pageParam } = await searchParams;
+  const t = translations[lang as keyof typeof translations];
 
-  const total = posts.length;
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  const paginatedPosts = posts.slice(offset, offset + PAGE_SIZE);
+  const page = Math.max(1, parseInt(pageParam || "1", 10));
+  const posts = await getBlogListPosts({ loadDatabasePosts: loadPublishedDatabaseBlogPosts });
+  const { totalPages, paginatedPosts } = paginateBlogPosts(posts, page, PAGE_SIZE);
 
   return (
     <div className="min-h-screen bg-[#071431]">
